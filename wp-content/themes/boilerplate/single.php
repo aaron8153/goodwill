@@ -30,11 +30,6 @@ get_header(); ?>
 
 			<?php endif; ?>
 			<span id="side-nav-footer"></span>
-			<div id="signup">
-			<?php
-				echo(FrmAppController::get_form_shortcode(array('id' => '7', 'key' => '', 'title' => false, 'description' => false, 'readonly' => false, 'entry_id' => false)));
-			?>
-			</div>
 			
 			
 		</div>
