@@ -41,7 +41,7 @@
 					
 				});
 				//Constant Contact Quicky
-				var default_val = "Your Email Address";
+				var default_val = "Email Address";
 				var previous_val;
 				var eobj;
 				var error_span = $('#con-contact span#con-errors');
@@ -49,14 +49,14 @@
 					email_addy = $(this);
 					email_addy_val = email_addy.val();
 					email_addy.css({"background-color": "#ffffff"});
-					if(email_addy_val == "Your Email Address" || email_addy_val == "") {
+					if(email_addy_val == "Email Address" || email_addy_val == "") {
 						previous_val = email_addy_val;
 						email_addy.val("");
 					}
 					
 					email_addy.blur(function() {
 						var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
-
+						email_addy_val = email_addy.val();
 						if ( email_addy_val == "" || !emailReg.test(email_addy_val) ) {
 							//something was entered already - revert to that
 							if( previous_val != default_val ) {
