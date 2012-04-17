@@ -42,14 +42,14 @@ define('DB_COLLATE', '');
  *
  * @since 2.6.0
  */
-define('AUTH_KEY',         '@j?ipQ1nR,yuuCW@U50.56.182.32AS-{%gQEpSr_+<dyb+>:Yd#nWbetyh~4rmMUap4Q6rZEcZy');
-define('SECURE_AUTH_KEY',  '+hOIBXnJ~C;ftmT([CA|]_wDS50.56.182.32G<K?#S8{H>//EaLy7]h:jhRfj.K=Usg#g&$9+ox');
-define('LOGGED_IN_KEY',    'c8K?-u_wU{BZ2yHK_sbOo1@?!50.56.182.32}H<`PM%7^l6VJTY,~DSOJ,zCtVI@Ym$WZi1@5x5');
-define('NONCE_KEY',        's5,9YV+%:+HFX#l~ %RE`AZ/p50.56.182.32Uzn<&<R%71t-|[H-L+}AtN9/thH&dMcVM8WN|Q');
-define('AUTH_SALT',        'KUEIq@~d.Tk+~t>1:HS9$8G_*50.56.182.32zG,jcuq2l=7l#KE[-1c)QW3a{LwGi-kwhRVP&]g');
-define('SECURE_AUTH_SALT', ';0GoKVCGWIZh:YOa*h[]-T&Di50.56.182.32np=:iQ;z$>OkEYNi2@Y`|5-c|n:Jb #}97E?LX7');
-define('LOGGED_IN_SALT',   'we3RP{hVolwbVh-((L%LEcHKl50.56.182.32[IaA9<bDvi`h/M:3U7xK8S]A|.Q,2$|*jcOqWNB');
-define('NONCE_SALT',       '~<MckLITBiGaIV)497^JDbe-)50.56.182.32G:*}/Prup?HeQMLNLz2kG~d/306X7Noin@gGh7+');
+define('AUTH_KEY',         '@j?ipQ1nR,yuuCW@Uwww.mersgoodwill.orgAS-{%gQEpSr_+<dyb+>:Yd#nWbetyh~4rmMUap4Q6rZEcZy');
+define('SECURE_AUTH_KEY',  '+hOIBXnJ~C;ftmT([CA|]_wDSwww.mersgoodwill.orgG<K?#S8{H>//EaLy7]h:jhRfj.K=Usg#g&$9+ox');
+define('LOGGED_IN_KEY',    'c8K?-u_wU{BZ2yHK_sbOo1@?!www.mersgoodwill.org}H<`PM%7^l6VJTY,~DSOJ,zCtVI@Ym$WZi1@5x5');
+define('NONCE_KEY',        's5,9YV+%:+HFX#l~ %RE`AZ/pwww.mersgoodwill.orgUzn<&<R%71t-|[H-L+}AtN9/thH&dMcVM8WN|Q');
+define('AUTH_SALT',        'KUEIq@~d.Tk+~t>1:HS9$8G_*www.mersgoodwill.orgzG,jcuq2l=7l#KE[-1c)QW3a{LwGi-kwhRVP&]g');
+define('SECURE_AUTH_SALT', ';0GoKVCGWIZh:YOa*h[]-T&Diwww.mersgoodwill.orgnp=:iQ;z$>OkEYNi2@Y`|5-c|n:Jb #}97E?LX7');
+define('LOGGED_IN_SALT',   'we3RP{hVolwbVh-((L%LEcHKlwww.mersgoodwill.org[IaA9<bDvi`h/M:3U7xK8S]A|.Q,2$|*jcOqWNB');
+define('NONCE_SALT',       '~<MckLITBiGaIV)497^JDbe-)www.mersgoodwill.orgG:*}/Prup?HeQMLNLz2kG~d/306X7Noin@gGh7+');
 
 /**#@-*/
 
