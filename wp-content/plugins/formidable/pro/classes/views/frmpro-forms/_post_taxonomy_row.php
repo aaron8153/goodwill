@@ -1,16 +1,7 @@
 <div id="frm_posttax_<?php echo $field_vars['meta_name'] . $tax_key ?>" class="frm_posttax_row">
     <span><a href="javascript:frm_remove_tag('#frm_posttax_<?php echo $field_vars['meta_name'] . $tax_key ?>');"> X </a></span>
     &nbsp;
-    <?php _e('Add Taxonomy', 'formidable') ?>
-    <?php if(isset($taxonomies) and $taxonomies){ ?>
-       <select name="options[post_category][<?php echo $field_vars['meta_name'] . $tax_key ?>][meta_name]">
-       <?php foreach($taxonomies as $taxonomy){ ?>
-           <option value="<?php echo $taxonomy ?>" <?php selected($field_vars['meta_name'], $taxonomy) ?>><?php echo str_replace(array('_','-'), ' ', ucfirst($taxonomy)) ?></option>
-       <?php } ?>
-       </select>
-       <?php } ?>
-       
-    <?php _e('from', 'formidable') ?>
+    <?php _e('Link', 'formidable') ?>
     <select name="options[post_category][<?php echo $field_vars['meta_name'] . $tax_key ?>][field_id]">
         <option value="">- <?php echo _e('Select Field', 'formidable') ?> -</option>
         <?php 
@@ -35,6 +26,15 @@
         } 
         ?>
     </select>
+    
+    <?php _e('to taxonomies from', 'formidable') ?>
+    <?php if(isset($taxonomies) and $taxonomies){ ?>
+       <select name="options[post_category][<?php echo $field_vars['meta_name'] . $tax_key ?>][meta_name]">
+       <?php foreach($taxonomies as $taxonomy){ ?>
+           <option value="<?php echo $taxonomy ?>" <?php selected($field_vars['meta_name'], $taxonomy) ?>><?php echo str_replace(array('_','-'), ' ', ucfirst($taxonomy)) ?></option>
+       <?php } ?>
+       </select>
+    <?php } ?>
 
 <?php if($selected_type != 'tag'){ ?>
     <input type="checkbox" value="1" name="options[post_category][<?php echo $field_vars['meta_name'] . $tax_key ?>][show_exclude]" <?php echo (isset($field_vars['exclude_cat']) and $field_vars['exclude_cat'] and !empty($field_vars['exclude_cat'])) ? 'checked="checked"' : ''; ?> onchange="frm_show_div('frm_exclude_cat_list_<?php echo $field_vars['meta_name'] . $tax_key ?>',this.checked,1,'#')" /> <?php _e('Exclude options', 'formidable'); ?>

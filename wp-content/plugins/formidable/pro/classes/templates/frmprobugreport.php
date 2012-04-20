@@ -2,6 +2,7 @@
 
 $values['name'] = 'Defect/Bug/Issue Report';
 $values['description'] = 'The following fields are all required to process this report. Enter \'N/A\' in fields that are not applicable.';
+$values['options']['custom_style'] = 1;
 
 if ($form){
     $form_id = $form->id;
@@ -18,18 +19,22 @@ if ($form){
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('text', $form_id));
 $field_values['name'] = 'Full Name';
 $field_values['required'] = 1;
+$field_values['field_options']['classes'] = 'frm_left_half';
 $frm_field->create( $field_values );
 unset($field_values);
 
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('text', $form_id));
 $field_values['name'] = 'Company Name';
 $field_values['required'] = 1;
+$field_values['field_options']['classes'] = 'frm_right_half';
 $frm_field->create( $field_values );
 unset($field_values);
 
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('phone', $form_id));
 $field_values['name'] = 'Phone Number';
 $field_values['required'] = 1;
+$field_values['field_options']['size'] = '';
+$field_values['field_options']['classes'] = 'frm_left_half';
 $field_values['field_options']['invalid'] = 'Please enter a valid phone number';
 $frm_field->create( $field_values );
 unset($field_values);
@@ -37,6 +42,7 @@ unset($field_values);
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('email', $form_id));
 $field_values['name'] = 'Email';
 $field_values['required'] = 1;
+$field_values['field_options']['classes'] = 'frm_right_half';
 $field_values['field_options']['invalid'] = 'Please enter a valid email address';
 $frm_field->create( $field_values );
 unset($field_values);
@@ -79,6 +85,8 @@ unset($field_values);
 
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('radio', $form_id));
 $field_values['name'] = 'Is there a Workaround?';
+$field_values['field_options']['label'] = 'inline';
+$field_values['field_options']['align'] = 'inline';
 $field_values['options'] = serialize(array('Yes', 'No'));
 $field_values['required'] = 1;
 $workaround = $frm_field->create( $field_values, true );
@@ -105,6 +113,7 @@ unset($field_values);
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('select', $form_id));
 $field_values['name'] = 'Reproducibility';
 $field_values['options'] = serialize(array('', 'I didn\'t try', 'Rarely', 'Sometimes', 'Always'));
+$field_values['field_options']['classes'] = 'frm_left_half';
 $field_values['required'] = 1;
 $frm_field->create( $field_values );
 unset($field_values);
@@ -112,6 +121,7 @@ unset($field_values);
 $field_values = apply_filters('frm_before_field_created', FrmFieldsHelper::setup_new_vars('select', $form_id));
 $field_values['name'] = 'Classification';
 $field_values['options'] = serialize(array('', 'Security', 'Crash/Hang/Data Loss', 'Performance', 'UI/Usability', 'Serious Bug', 'Other Bug/Has Workaround', 'Feature (New)', 'Enhancement'));
+$field_values['field_options']['classes'] = 'frm_right_half';
 $field_values['required'] = 1;
 $frm_field->create( $field_values );
 unset($field_values);

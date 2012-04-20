@@ -1,7 +1,8 @@
 <?php 
 if ($field['type'] == 'hidden'){
-    if (is_admin() and (!isset($_GET['action']) or $_GET['action'] != 'new')){ ?>
-<div id="frm_field_<?php $field['id'] ?>_container" class="form-field frm_top_container">
+    $frm_action = (isset($_GET) and isset($_GET['frm_action'])) ? 'frm_action' : 'action';
+    if (is_admin() and (!isset($_GET[$frm_action]) or $_GET[$frm_action] != 'new')){ ?>
+<div id="frm_field_<?php $field['id'] ?>_container" class="frm_form_field form-field frm_top_container">
 <label class="frm_primary_label"><?php echo $field['name'] ?>:</label> <?php echo $field['value']; ?>
 </div>
 <?php } 

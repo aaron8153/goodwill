@@ -2,9 +2,9 @@
 Contributors: sswells, srwells
 Donate link: http://formidablepro.com/donate
 Tags: admin, AJAX, captcha, contact, contact form, database, email, feedback, form, forms, javascript, jquery, page, plugin, poll, Post, spam, survey, template, widget, wpmu
-Requires at least: 2.8
+Requires at least: 2.9
 Tested up to: 3.3.1
-Stable tag: 1.06.02
+Stable tag: 1.06.03
 
 Quickly and easily build forms with a simple drag-and-drop interface and in-place editing.
 
@@ -61,6 +61,66 @@ A. Try clearing your browser cache. As plugin modifications are made, frequent j
 [See more FAQs](http://formidablepro.com/formidable-faqs/ "Formidable Pro FAQs")
 
 == Changelog ==
+= 1.06.03 =
+* Added option to not store entries in the database from a specific form
+* Added option to skip Akismet spam check for logged in users
+* The forms, entries, and custom display page columns that are shown and entries per page are now customizable for those running at least v3.1 of WordPress
+* Added a css class option to the field options with predefined CSS classes for multi-column forms: frm_first_half, frm_last_half, frm_first_third, frm_third, frm_last_third, frm_first_fourth, frm_fourth, frm_last_fourth, frm_first_inline, frm_inline, frm_last_inline, frm_full, frm_grid_first, frm_grid, frm_grid_odd
+* Added the option to add a class to an input. In the customizable HTML, change [input] to [input class="your_class_here"]
+* Added "inline" option to label position options to have a label to the left without the width restriction
+* Switched the "action" parameter to "frm_action" to prevent conflicts. If no "frm_action" value is present, "action" will still be used
+* Updated templates with new styling classes
+* Show quotation marks instead of entities in the site name in email notifications
+* Added Polish translation
+* PRO: Removed a vulnerable Open Flash Charts file. If you do not update, be sure to REMOVE THIS FILE! (pro/js/ofc-library/ofc_upload_image.php)
+* PRO: Added option to use a separate value for the radio, checkbox, and select choices
+* PRO: Added option to use dynamic default values for radio, checkbox, dropdown, and user ID fields
+* PRO: Added option to use Google charts and automatically fall back to them on mobile devices [frm-graph id=x type=bar google=1]
+* PRO: Added data from entry field support to graphs
+* PRO: Added option to use Google tables for easy pagination and sorting [formresults id=x google=1]
+* PRO: Added edit link option to formresults shortcode. [formresults id=x edit_link="Edit" page_id=5]
+* PRO: Added date support to built-in calculations for date1-date2 types of calculations
+* PRO: Added checking for disabled used dates for fields set as post fields in date picker for dates marked as unique
+* PRO: Added not_like, less_than, and greater_than options to conditional custom display statements. Ex [if 25 not_like="hello"]...[/if 25]
+* PRO: Allow [if created-at less_than='-1 month'] type of statements in the custom display for date fields, created-at, and updated-at
+* PRO: Added option to display the field label in custom displays. Ex [25 show="field_label"]
+* PRO: Added option to turn off auto paragraphs for paragraph fields. Ex [25 wpautop=0]
+* PRO: Added options to custom display shortcode: [display-frm-data id=5 get="whatever" get_value="value"]. This allows the use of [get param="whatever"] in the custom display. 
+* PRO: Updated the frm-entry-links shortcode to use show_delete with type=list
+* PRO: Updated custom display where options to fetch entries more accurately when "not like" and "not equal to" are used
+* PRO: Fixed image upload naming for uploads with numeric names like 1.png
+* PRO: Fixed issue with multiple editable forms on the same page when one is set to only allow one entry per user
+* PRO: Added a check for automatically inserted custom displays to make sure we are in the loop to avoid the need for increasing the insert position setting
+* PRO: Show the post type label in the post type dropdown instead of the singular label to avoid blank options for custom post types without a singular name defined
+* PRO: Switched out the case-sensitive sorting in data from entries fields
+* PRO: If a custom display has detail link parameters defined, ONLY allow those parameters
+* PRO: Added an input mask option available via the $frm_input_masks global and 'frm_input_masks' hook
+* PRO: Added type=maximum and type=minimum to the frm-stats shortcode
+* PRO: Month and year dropdowns added to custom display calendar, along with a few styling changes
+* PRO: Get the custom display calendar month and day names from WordPress
+* PRO: Allow dynamic default values in HTML field type
+* PRO: Get post status options from WordPress function instead of a copy
+* PRO: Check the default [auto_id] value after submit to make sure it's still unique
+* PRO: If the "round" parameter is used in the frm-stats shortcode, floating zeros will be kept
+* PRO: If greater than or less than options are used with a number field in a custom display, treat them as numbers instead of regular text
+* PRO: Allow user logins for the user_id parameter in the frm-graph, frm-stats, and display-frm-data shortcodes
+* PRO: Fixed the date format d-mm-yyyy to work correctly in the date field
+* PRO: Added timeout to redirect so users will see the redirect message for a few seconds before being redirected
+* PRO: Allow decimal values in graphs instead of forcing integers
+* PRO: Updated the time field to use a true select box instead of a text field
+* PRO: Removed included swfobject and json2 javascripts to use the included WordPress versions
+* PRO: Added 'frm_graph_value' filters to change the value used in the graphs
+* PRO: Populate strings to be translated without requiring a visit to the WPML plugin
+* PRO: If the where options in a custom display include a GET or POST value that is an array, translate the search to check each value instead of searching for a comma-separated value in one record.
+* PRO: Added entry key and entry ID to the where options in custom displays
+* PRO: Added HTML classes on the search form, so if themes include styling for the WP search form, it will be applied to the [frm-search] as well
+* PRO: Allow multiple data from entries fields to be searched using the frm-search shortcode instead of only one
+* PRO: Fixed update checking to not cause a slow down if the formidablepro.com server is down
+* PRO: Updated the user_id parameter for the display-frm-data shortcode to be used even if there's no user ID field selected in the where options for that custom display
+* PRO: Added DOING_AJAX flags for WPML compatibility
+* PRO: Added time_ago=1 option for displaying dates. Ex: [created-at time_ago=1] or [25 time_ago=1]
+* PRO: Updated file upload process to change the file path before uploading instead of moving the files afterwards
+
 = 1.06.02 =
 * Fixed selection of dropdowns on the form builder page in Chrome
 * Added WPML integration. Requires the add-on available from WPML. Pro version includes a quick translation page.

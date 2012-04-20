@@ -2,7 +2,7 @@
 /*
 Plugin Name: Formidable
 Description: Quickly and easily create drag-and-drop forms
-Version: 1.06.02
+Version: 1.06.03
 Plugin URI: http://formidablepro.com/
 Author URI: http://strategy11.com
 Author: Strategy11
@@ -31,7 +31,7 @@ define('FRM_TEMPLATES_PATH', FRM_PATH.'/classes/templates');
 
 global $frm_siteurl;
 $frm_siteurl = get_bloginfo('url');
-if(is_ssl() and !preg_match('/^https:\/\/.*\..*$/', $frm_siteurl)){
+if(is_ssl() and (!preg_match('/^https:\/\/.*\..*$/', $frm_siteurl) or !preg_match('/^https:\/\/.*\..*$/', WP_PLUGIN_URL))){
     $frm_siteurl = str_replace('http://', 'https://', $frm_siteurl);
     define('FRM_URL', str_replace('http://', 'https://', WP_PLUGIN_URL.'/formidable'));
 }else
@@ -52,9 +52,8 @@ if (!defined ('IS_WPMU')){
 }
 
 global $frm_version, $frm_db_version;
-$frm_version = '1.06.02';
-$frm_db_version = 7;
-
+$frm_version = '1.06.03';
+$frm_db_version = 8;
 
 global $frm_ajax_url;
 $frm_ajax_url = admin_url('admin-ajax.php');
@@ -70,19 +69,25 @@ $frm_app_helper = new FrmAppHelper();
 /***** SETUP SETTINGS OBJECT *****/
 global $frm_settings;
 
-$frm_settings = get_option('frm_options');
-
-// If unserializing didn't work
+$frm_settings = get_transient('frm_options');
 if(!is_object($frm_settings)){
-    if($frm_settings) //workaround for W3 total cache conflict
+    if($frm_settings){ //workaround for W3 total cache conflict
         $frm_settings = unserialize(serialize($frm_settings));
-    else
-        $frm_settings = new FrmSettings();
-    update_option('frm_options', $frm_settings);
+    }else{
+        $frm_settings = get_option('frm_options');
+
+        // If unserializing didn't work
+        if(!is_object($frm_settings)){
+            if($frm_settings) //workaround for W3 total cache conflict
+                $frm_settings = unserialize(serialize($frm_settings));
+            else
+                $frm_settings = new FrmSettings();
+            update_option('frm_options', $frm_settings);
+            set_transient('frm_options', $frm_settings);
+        }
+    }
 }
-
 $frm_settings->set_default_options(); // Sets defaults for unset options
-
 
 // Instansiate Models
 require_once(FRM_MODELS_PATH.'/FrmDb.php');  

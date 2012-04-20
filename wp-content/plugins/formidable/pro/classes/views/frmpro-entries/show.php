@@ -16,18 +16,18 @@
                     <div class="submitbox">
                     <div id="minor-publishing" style="border:none;">
                         <div class="misc-pub-section">
-                            <a href="?page=formidable-entries&amp;action=duplicate&amp;form=<?php echo $entry->form_id ?>&amp;id=<?php echo $id; ?>" class="button-secondary alignright"><?php _e('Duplicate', 'formidable') ?></a>
+                            <a href="?page=formidable-entries&amp;frm_action=duplicate&amp;form=<?php echo $entry->form_id ?>&amp;id=<?php echo $id; ?>" class="button-secondary alignright"><?php _e('Duplicate', 'formidable') ?></a>
                             
                             <p class="howto"><?php FrmProEntriesHelper::resend_email_links($entry->id, $entry->form_id); ?></p>
                         </div>
                     </div>
                 	<div id="major-publishing-actions">
                 	    <div id="delete-action">                	    
-                	        <a class="submitdelete deletion" href="?page=formidable-entries&amp;action=destroy&amp;id=<?php echo $id; ?>&amp;form=<?php echo $entry->form_id ?>" onclick="return confirm('<?php _e('Are you sure you want to delete that entry?', 'formidable') ?>');" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
+                	        <a class="submitdelete deletion" href="?page=formidable-entries&amp;frm_action=destroy&amp;id=<?php echo $id; ?>&amp;form=<?php echo $entry->form_id ?>" onclick="return confirm('<?php _e('Are you sure you want to delete that entry?', 'formidable') ?>');" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
                 	    </div>
                 	    
                 	    <div id="publishing-action">
-                	        <a href="<?php echo add_query_arg('action', 'edit') ?>" class="button-primary"><?php _e('Edit', 'formidable') ?></a>
+                	        <a href="<?php echo add_query_arg('frm_action', 'edit') ?>" class="button-primary"><?php _e('Edit', 'formidable') ?></a>
                         </div>
                         <div class="clear"></div>
                     </div>
@@ -98,6 +98,8 @@
                         ?>
                         </td></tr>
                         <?php } ?>
+                        <tr><th><?php _e('Entry ID', 'formidable') ?>:</th><td><?php echo $entry->id ?></td></tr>
+                        <tr><th><?php _e('Entry Key', 'formidable') ?>:</th><td><?php echo $entry->item_key ?></td></tr>
                         </tbody></table>
                         <?php do_action('frm_show_entry', $entry); ?>
                     </div>
@@ -139,7 +141,7 @@
                                 <th scope="row"><p><strong><?php echo FrmProFieldsHelper::get_display_name($meta['user_id'], 'display_name', array('link' => true)) ?></strong><br/>
                                     <?php echo FrmProAppHelper::get_formatted_time($comment->created_at, $date_format, $time_format)  ?></p>
                                 </th>
-                                <td><div class="frm_comment"><?php echo wpautop(html_entity_decode(strip_tags($meta['comment']))) ?></div></td>
+                                <td><div class="frm_comment"><?php echo wpautop(strip_tags($meta['comment'])) ?></div></td>
                             </tr>
                         <?php } ?>
                         </table>
@@ -147,7 +149,7 @@
                         <div class="clear"></div>
                         
                         <form name="frm_comment_form" id="frm_comment_form" method="post" style="display:none;">
-                            <input type="hidden" name="action" value="show" />
+                            <input type="hidden" name="frm_action" value="show" />
                             <input type="hidden" name="field_id" value="0" />
                             <input type="hidden" name="item_id" value="<?php echo $entry->id ?>" />
                             <?php wp_nonce_field('add-option'); ?>

@@ -9,11 +9,9 @@ class FrmProField{
     function create($field_data){
         global $frmpro_settings;
         
-        if ($field_data['field_options']['label'] != 'none'){
-            global $frmpro_settings;
-            $field_data['field_options']['label'] = ($frmpro_settings->position == 'none') ? 'top' : $frmpro_settings->position;
-            
-        }
+        if ($field_data['field_options']['label'] != 'none')
+            $field_data['field_options']['label'] = '';
+
         
         switch($field_data['type']){
             case '10radio':

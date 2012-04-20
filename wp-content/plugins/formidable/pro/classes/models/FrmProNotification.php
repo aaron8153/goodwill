@@ -97,7 +97,7 @@ class FrmProNotification{
             $bg_color_alt = " style='background-color:#{$frmpro_settings->bg_color_active};'";
         }
         
-        $reply_to_name = get_option('blogname');  //default sender name
+        $reply_to_name = $frm_blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);  //default sender name
         $odd = true;
         $attachments = array();
         
@@ -173,8 +173,9 @@ class FrmProNotification{
         
         
         if(!isset($reply_to)){
-            global $frm_settings;
-            $reply_to = $frm_settings->email_to;
+            $reply_to = '[admin_email]';
+            //global $frm_settings;
+            //$reply_to = $frm_settings->email_to;
         }
         
         if(isset($form_options['inc_user_info']) and $form_options['inc_user_info']){
@@ -201,7 +202,6 @@ class FrmProNotification{
             $subject = FrmProFieldsHelper::replace_shortcodes($form_options['email_subject'], $entry, $shortcodes);
             $subject = apply_filters('frm_email_subject', $subject, compact('form', 'entry'));
         }else{
-            $frm_blogname = get_option('blogname');
             //set default subject
             $subject = sprintf(__('%1$s Form submitted on %2$s', 'formidable'), stripslashes($form->name), $frm_blogname);
         }
@@ -212,11 +212,11 @@ class FrmProNotification{
             $mail_body = $default;
         
         $to_emails = apply_filters('frm_to_email', $to_emails, $values, $form_id);
-        if(is_array($to_emails)){
-            foreach($to_emails as $to_email)
-                $frm_notification->send_notification_email(trim($to_email), $subject, $mail_body, $reply_to, $reply_to_name, $plain_text, $attachments);
-        }else
-            $frm_notification->send_notification_email($to_emails, $subject, $mail_body, $reply_to, $reply_to_name, $plain_text, $attachments);
+        foreach((array)$to_emails as $to_email){
+            $to_email = apply_filters('frm_content', $to_email, $form, $entry_id);
+            $frm_notification->send_notification_email(trim($to_email), $subject, $mail_body, $reply_to, $reply_to_name, $plain_text, $attachments);
+        }
+
         return $to_emails;
     }
     
@@ -288,8 +288,9 @@ class FrmProNotification{
         $shortcodes = FrmProAppHelper::get_shortcodes($message, $form_id);
         $mail_body  = FrmProFieldsHelper::replace_shortcodes($message, $entry, $shortcodes);
         
-        $reply_to_name = (isset($form_options['ar_reply_to_name'])) ? $form_options['ar_reply_to_name'] : get_option('blogname'); //default sender name
-        $reply_to = (isset($form_options['ar_reply_to'])) ? $form_options['ar_reply_to'] : get_option('admin_email');  //default sender email
+        $frm_blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $reply_to_name = (isset($form_options['ar_reply_to_name'])) ? $form_options['ar_reply_to_name'] : $frm_blogname; //default sender name
+        $reply_to = (isset($form_options['ar_reply_to'])) ? $form_options['ar_reply_to'] : '[admin_email]';  //default sender email
 
         foreach ($values as $value){
             /*
@@ -330,7 +331,6 @@ class FrmProNotification{
             $shortcodes = FrmProAppHelper::get_shortcodes($form_options['ar_email_subject'], $form_id);
             $subject = FrmProFieldsHelper::replace_shortcodes($form_options['ar_email_subject'], $entry, $shortcodes);
         }else{
-            $frm_blogname = get_option('blogname');
             $subject = sprintf(__('%1$s Form submitted on %2$s', 'formidable'), stripslashes($form->name), $frm_blogname); //subject
         }
         

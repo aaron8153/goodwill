@@ -17,10 +17,10 @@ function frmImportCsv(){
     jQuery.ajax({type:"POST",url:"<?php echo $frm_ajax_url ?>",data:"action=frm_import_csv&frm_skip_cookie=1<?php echo $url_vars ?>",
     success:function(count){
         if(parseInt(count) > 0){ jQuery("#frm_import_message .frm_message").html('The next 250 of the remaining '+count+' entries are importing.<br/> If your browser doesn&#8217;t start loading the next set automatically, click this button: <a id="frm_import_link"  class="button-secondary" href="javascript:frmImportCsv()">Import Now</a>');
-            location.href = "?page=<?php echo $_GET['page'] ?>&action=import&step=import<?php echo $url_vars ?>";
+            location.href = "?page=<?php echo $_GET['page'] ?>&frm_action=import&step=import<?php echo $url_vars ?>";
         }else{ 
             jQuery("#frm_import_message").fadeOut("slow");
-            location.href = "?page=formidable-entries&action=list&form=<?php echo $form_id ?>";
+            location.href = "?page=formidable-entries&frm_action=list&form=<?php echo $form_id ?>";
         }
     }
     });
@@ -30,7 +30,7 @@ function frmImportCsv(){
         
     <?php }else{ ?>
     <form enctype="multipart/form-data" method="post">
-        <input type="hidden" name="action" value="import" />
+        <input type="hidden" name="frm_action" value="import" />
         <?php wp_nonce_field('import-csv'); ?>
         
         

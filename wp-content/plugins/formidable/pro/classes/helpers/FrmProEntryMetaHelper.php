@@ -2,7 +2,7 @@
 
 class FrmProEntryMetaHelper{
     function FrmProEntryMetaHelper(){
-        add_filter('frm_email_value', array($this, 'email_value'), 10, 3);
+        add_filter('frm_email_value', array(&$this, 'email_value'), 10, 3);
     }
     
     function email_value($value, $meta, $entry){
@@ -115,6 +115,7 @@ class FrmProEntryMetaHelper{
                     if($atts['type'] != 'data')
                         $new_value .= "<br/>";
                 }
+                unset($val);
             }
         }
 
@@ -175,10 +176,46 @@ class FrmProEntryMetaHelper{
             }
         }
         
-        if(is_array($value))
-            $value = stripslashes_deep($value);
+        $value = stripslashes_deep($value);
 
         return apply_filters('frm_display_value', $value, $field, $atts);
+    }
+    
+    function get_post_or_meta_value($entry, $field, $atts=array()){
+        global $frm_entry_meta;
+        
+        if(!is_object($entry)){
+            global $frm_entry;
+            $entry = $frm_entry->getOne($entry);
+        }
+        
+        $field->field_options = maybe_unserialize($field->field_options);
+         
+        if($entry->post_id){
+            if(!isset($field->field_options['custom_field']))
+                $field->field_options['custom_field'] = '';
+            
+            if(!isset($field->field_options['post_field']))
+                $field->field_options['post_field'] = '';
+              
+            $links = true;
+            if(isset($atts['links']))
+                $links = $atts['links'];
+                
+            if($field->type == 'tag' or $field->field_options['post_field']){
+                $post_args = array('type' => $field->type, 'form_id' => $field->form_id, 'field' => $field, 'links' => $links, 'exclude_cat' => $field->field_options['exclude_cat']);
+                if(isset($atts['show']))
+                    $post_args['show'] = $atts['show'];
+                $value = FrmProEntryMetaHelper::get_post_value($entry->post_id, $field->field_options['post_field'], $field->field_options['custom_field'], $post_args);
+                unset($post_args);
+            }else{
+                $value = $frm_entry_meta->get_entry_meta_by_field($entry->id, $field->id);
+            }
+        }else{
+            $value = $frm_entry_meta->get_entry_meta_by_field($entry->id, $field->id);
+        }
+
+        return $value;
     }
     
     function get_post_value($post_id, $post_field, $custom_field, $atts){
@@ -188,7 +225,7 @@ class FrmProEntryMetaHelper{
         
         $defaults = array(
             'sep' => ', ', 'truncate' => true, 'form_id' => false, 
-            'field' => array(), 'links' => false
+            'field' => array(), 'links' => false, 'show' => ''
         );
         
 		$atts = wp_parse_args( $atts, $defaults );
@@ -241,7 +278,10 @@ class FrmProEntryMetaHelper{
                         $cat_ids[] = $cat->term_id;
                     }
                 }
-                if($atts['truncate'])
+            
+                if($atts['show'] == 'id')
+                    $value = implode($atts['sep'], $cat_ids);
+                else if($atts['truncate'])
                     $value = implode($atts['sep'], $names);
                 else
                     $value = $cat_ids;

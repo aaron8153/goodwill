@@ -13,7 +13,7 @@
         <form method="get">
             <div id="post-body">
             <p><?php _e('Select a form for your new entry.', 'formidable'); ?></p>
-            <input type="hidden" name="action" value="new" />
+            <input type="hidden" name="frm_action" value="new" />
             <input type="hidden" name="page" value="formidable-entries" />
             <?php FrmFormsHelper::forms_dropdown('form', '', false); ?><br/>
             </div>

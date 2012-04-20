@@ -1,5 +1,5 @@
 <input type="hidden" name="id" value="<?php echo $id; ?>" />
-<input type="hidden" name="action" value="update_translate" />
+<input type="hidden" name="frm_action" value="update_translate" />
 
 <table class="widefat fixed">
 <thead>
@@ -23,7 +23,7 @@ foreach($strings as $string){
     $col = 0;
 ?>
 <tr class="<?php echo $alternate; ?>">
-    <td><?php echo stripslashes($string->value); ?></td>
+    <td><?php echo htmlspecialchars(stripslashes($string->value)); ?></td>
 <?php
     foreach($translations as $trans){
         if($trans->string_id != $string->id)

@@ -1,8 +1,14 @@
 <table class="form_results<?php echo ($style)? ' with_frm_style': ''; ?>" id="form_results<?php echo $form->id ?>" cellspacing="0">
     <thead>
-    <tr>      
-    <?php foreach ($form_cols as $col){ ?>
+    <tr> 
+    <?php if(in_array('id', $fields)){ ?>   
+    <th><?php _e('ID', 'formidable'); ?></th>  
+    <?php }
+        foreach ($form_cols as $col){ ?>
         <th><?php echo stripslashes($col->name); ?></th>
+    <?php } 
+        if($edit_link){ ?>
+    <th><?php echo $edit_link ?></th>
     <?php } ?>
     </tr>
     </thead>
@@ -12,14 +18,22 @@
 <?php
 }else{
     $class = 'odd';
+    
     foreach($entries as $entry){  ?>
         <tr class="frm_<?php echo $class ?>">
-        <?php foreach ($form_cols as $col){ ?>
+        <?php if(in_array('id', $fields)){ ?>   
+            <td><?php echo $entry->id ?></dh>  
+        <?php }
+            foreach ($form_cols as $col){ ?>
             <td valign="top">
                 <?php echo FrmProEntryMetaHelper::display_value((isset($entry->metas[$col->id]) ? $entry->metas[$col->id] : false), $col, array('type' => $col->type, 'post_id' => $entry->post_id, 'entry_id' => $entry->id)); 
                 ?>
             </td>
-        <?php } ?>
+<?php       }
+
+            if($edit_link){ ?>
+        <td><a href="<?php echo esc_url(add_query_arg(array('frm_action' => 'edit', 'entry' => $entry->id), $permalink) . $anchor)  ?>"><?php echo $edit_link ?></a></td>
+<?php       } ?>
         </tr>
 <?php
     $class = ($class == 'even') ? 'odd' : 'even';

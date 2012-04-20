@@ -17,6 +17,16 @@
 					</select>
 				</div>
 				
+				<div class="field-group clearfix">
+					<label><?php _e('Max Size', 'formidable') ?></label>
+					<select name="frm_form_width" id="frm_form_width">
+						<option value="100%" <?php selected($frmpro_settings->form_width, '100%') ?>><?php _e('full', 'formidable') ?></option>
+						<option value="700px" <?php selected($frmpro_settings->form_width, '700px') ?>><?php _e('large', 'formidable') ?></option>
+						<option value="500px" <?php selected($frmpro_settings->form_width, '500px') ?>><?php _e('medium', 'formidable') ?></option>
+						<option value="300px" <?php selected($frmpro_settings->form_width, '300px') ?>><?php _e('small', 'formidable') ?></option>
+					</select>
+				</div>
+				
 				<div class="field-group field-group-border clearfix">
 					<label><?php _e('Border', 'formidable') ?></label>
 					<input type="text" name="frm_fieldset" id="frm_fieldset" value="<?php echo esc_attr($frmpro_settings->fieldset) ?>" size="4" />
@@ -43,7 +53,7 @@
 			<div class="widget-inside">
 				<div class="field-group clearfix" style="padding-right:0;width:100%;">
 					<label><?php _e('Family', 'formidable') ?></label>
-					<input type="text" name="frm_font" id="frm_font" value="<?php echo stripslashes(htmlentities($frmpro_settings->font)) ?>"  class="frm_full_width" />
+					<input type="text" name="frm_font" id="frm_font" value="<?php echo esc_attr(stripslashes($frmpro_settings->font)) ?>"  class="frm_full_width" />
 				</div>
 				<div class="field-group field-group-background clearfix">
 					<label><?php _e('Color', 'formidable') ?></label>
@@ -107,7 +117,7 @@
 			<div class="widget-inside">
 				<div class="field-group clearfix" style="padding-right:0;width:100%;">
 					<label><?php _e('Family', 'formidable') ?></label>
-					<input type="text" name="frm_description_font" id="frm_description_font" value="<?php echo stripslashes(htmlentities($frmpro_settings->description_font)) ?>"  class="frm_full_width" />
+					<input type="text" name="frm_description_font" id="frm_description_font" value="<?php echo esc_attr(stripslashes($frmpro_settings->description_font)) ?>"  class="frm_full_width" />
 				</div>
 				<div class="field-group field-group-background clearfix">
 					<label><?php _e('Color', 'formidable') ?></label>
@@ -262,7 +272,7 @@
 				</div>
 				
 				<div class="field-group field-group-border clearfix">
-				    <label><?php _e('Border', 'formidable') ?></label>
+				    <label><?php _e('Border/Label', 'formidable') ?></label>
     				<input type="text" name="frm_border_color_error" id="frm_border_color_error" class="hex" value="<?php echo esc_attr($frmpro_settings->border_color_error) ?>" />
     			</div>
 				<div class="field-group clearfix">
@@ -308,7 +318,7 @@
     				
     				<div class="field-group clearfix">
     					<label><?php _e('Family', 'formidable') ?></label>
-    					<input type="text" name="frm_check_font" id="frm_check_font" value="<?php echo stripslashes(htmlentities($frmpro_settings->check_font)) ?>"  class="frm_full_width" />
+    					<input type="text" name="frm_check_font" id="frm_check_font" value="<?php echo esc_attr(stripslashes($frmpro_settings->check_font)) ?>"  class="frm_full_width" />
     				</div>
     				<div class="field-group field-group-background clearfix">
     					<label><?php _e('Color', 'formidable') ?></label>
@@ -340,10 +350,10 @@
 					<select name="frm_theme_selector" style="line-height:1;">
                 	    <?php 
                 	        foreach($jquery_themes as $theme_name => $theme_title){  ?>
-                        <option value="<?php echo $theme_name ?>" id="<?php echo FRMPRO_IMAGES_URL .'/themeGallery/theme_30_'. $theme_name .'.png'; ?>" <?php selected($theme_title, $frmpro_settings->theme_name) ?>><?php echo $theme_title ?></option> 
+                        <option value="<?php echo $theme_name ?>" id="theme_<?php echo $theme_name ?>" <?php selected($theme_title, $frmpro_settings->theme_name) ?>><?php echo $theme_title ?></option> 
                         <?php } ?>
                 	</select>
-                	<span id="frm_show_cal" style="vertical-align:bottom;"><img src="<?php echo FRMPRO_IMAGES_URL .'/themeGallery/theme_30_'. $frmpro_settings->theme_css .'.png'; ?>" height="27px" width="30px" /></span>
+                	<span id="frm_show_cal" class="theme_<?php echo $frmpro_settings->theme_css ?>"></span>
                 	<input type="hidden" value="<?php echo esc_attr($frmpro_settings->theme_css) ?>" id="frm_theme_css" name="frm_theme_css" />
                     <input type="hidden" value="<?php echo esc_attr($frmpro_settings->theme_name) ?>" id="frm_theme_name" name="frm_theme_name" />
                 	<div class="clear"></div>
@@ -507,6 +517,39 @@
 
 </div>
 
+<style type="text/css">
+#frm_show_cal{
+vertical-align:bottom; height:27px; width:30px;
+background:url(<?php echo FRMPRO_IMAGES_URL ?>/themeGallery.png) no-repeat; 
+display:inline-block;
+}
+#frm_show_cal.theme_black-tie{ background-position: 0 0; } 
+#frm_show_cal.theme_blitzer{ background-position: 0 -28px; } 
+#frm_show_cal.theme_cupertino{ background-position: 0 -56px; } 
+#frm_show_cal.theme_dark-hive{ background-position: 0 -84px; } 
+#frm_show_cal.theme_dot-luv{ background-position: 0 -112px; } 
+#frm_show_cal.theme_eggplant{ background-position: 0 -140px; } 
+#frm_show_cal.theme_excite-bike{ background-position: 0 -168px; } 
+#frm_show_cal.theme_flick{ background-position: 0 -196px; } 
+#frm_show_cal.theme_hot-sneaks{ background-position: 0 -224px; } 
+#frm_show_cal.theme_humanity{ background-position: 0 -252px; } 
+#frm_show_cal.theme_le-frog{ background-position: 0 -280px; } 
+#frm_show_cal.theme_mint-choc{ background-position: 0 -308px; } 
+#frm_show_cal.theme_overcast{ background-position: 0 -336px; } 
+#frm_show_cal.theme_pepper-grinder{ background-position: 0 -364px; } 
+#frm_show_cal.theme_redmond{ background-position: 0 -392px; } 
+#frm_show_cal.theme_smoothness{ background-position: 0 -420px; } 
+#frm_show_cal.theme_south-street{ background-position: 0 -448px; } 
+#frm_show_cal.theme_start{ background-position: 0 -476px; } 
+#frm_show_cal.theme_sunny{ background-position: 0 -504px; } 
+#frm_show_cal.theme_swanky-purse{ background-position: 0 -532px; } 
+#frm_show_cal.theme_trontastic{ background-position: 0 -560px; } 
+#frm_show_cal.theme_ui-darkness{ background-position: 0 -588px; } 
+#frm_show_cal.theme_ui-lightness{ background-position: 0 -616px; } 
+#frm_show_cal.theme_vader{ background-position: 0 -644px; } 
+</style>
+
+
 <script type="text/javascript">
 //<![CDATA[
 jQuery(document).ready(function($){ $("#datepicker_sample").datepicker(); frmUpdateCSS('<?php echo FrmProAppHelper::jquery_css_url($frmpro_settings->theme_css) ?>'); });
@@ -520,7 +563,7 @@ function updateCSS(locStr){
 
 function frm_import_templates(thisid){
     jQuery('#'+thisid).replaceWith('<img id="' + thisid + '" src="<?php echo FRM_IMAGES_URL; ?>/wpspin_light.gif" alt="<?php _e('Loading...', 'formidable'); ?>" />');
-    jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL ?>",data:"controller=forms&action=import",
+    jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL ?>",data:"controller=forms&frm_action=import",
         success:function(msg){ jQuery('#'+thisid).replaceWith('<?php _e('Templates Updated', 'formidable') ?>');}
     });
 }

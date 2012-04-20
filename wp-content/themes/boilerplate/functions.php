@@ -530,4 +530,31 @@ if ( function_exists( 'add_theme_support' ) ) {
 	add_theme_support( 'post-thumbnails' );
 }
 
+add_filter('frm_after_create_entry', 'after_entry_created', 30, 2);
+function after_entry_created($entry_id, $form_id){
+	if ($form_id == 22) {
+	
+		$theMsg = "Here is a value: ";
+	
+		if(isset($_POST['item_meta'][179])) {
+			$theMsg .= $_POST['item_meta'][179];
+		}
+			
+		$newFileName = date("Ymd:s");	
+			
+		$ourFileName = WP_CONTENT_DIR . "/uploads/formidable/applications/" . $newFileName . ".txt";		
+		$ourFileHandle = fopen($ourFileName, 'w') or die("Error:  Cannot Open File");
+		$stringData = $theMsg . "\n";
+		fwrite($ourFileHandle, $stringData);		
+		fclose($ourFileHandle);
+		
+		$attachment = $ourFileName;
+		
+		$theHeaders = "From: test@hotmail.com\r\n";
+		wp_mail('imcrainjames@gmail.com', 'New Job Application", $theMsg, $theHeaders, $attachment);
+	}
+	
+  	
+}
+
 ?>

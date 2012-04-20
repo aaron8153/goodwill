@@ -19,23 +19,21 @@
             <?php } ?>
         </ul>
         
-
-    <div class="general_settings metabox-holder tabs-panel" style="min-height:0px;border-bottom:none;">
-        <div class="postbox">
-            <h3 class="hndle"><div id="icon-ms-admin" class="icon32 frm_postbox_icon"><br/></div> <?php _e('Formidable Pro Account Information', 'formidable')?></h3>
-            <div class="inside">
-    <?php 
-    if (IS_WPMU and !FrmAppHelper::is_super_admin() and get_site_option($frm_update->pro_wpmu_store)){
-        //don't show cred form
-    }else{
-        $frm_update->pro_cred_form();
-    }
-    ?>
-            </div>
+<?php if (IS_WPMU and !FrmAppHelper::is_super_admin() and get_site_option($frm_update->pro_wpmu_store)){ ?>
+<div class="general_settings metabox-holder tabs-panel" style="min-height:0px;border-bottom:none;padding:0;">
+<?php }else{ ?>
+<div class="general_settings metabox-holder tabs-panel" style="min-height:0px;border-bottom:none;">
+    <div class="postbox">
+        <h3 class="hndle"><div id="icon-ms-admin" class="icon32 frm_postbox_icon"><br/></div> <?php _e('Formidable Pro Account Information', 'formidable')?></h3>
+        <div class="inside">
+            <?php $frm_update->pro_cred_form(); ?>
         </div>
     </div>
+<?php } ?>
+</div>
     
     <form name="frm_settings_form" method="post" class="frm_settings_form">
+        <input type="hidden" name="frm_action" value="process-form" />
         <input type="hidden" name="action" value="process-form" />
         <?php wp_nonce_field('update-options'); ?>
             
@@ -96,7 +94,8 @@
                 <td valign="top"><?php _e('User Permissions', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('Select users that are allowed access to Formidable. Without access to View Forms, users will be unable to see the Formidable menu.', 'formidable') ?>" /></td>
                 <td>
                     <?php foreach($frm_roles as $frm_role => $frm_role_description){ ?>
-                        <label style="width:200px;float:left;text-align:right;padding-right:10px;"><?php echo $frm_role_description ?>:</label> <?php FrmAppHelper::wp_roles_dropdown( $frm_role, $frm_settings->$frm_role ) ?><br/>
+                        <label style="width:200px;float:left;text-align:right;padding-right:10px;"><?php echo $frm_role_description ?>:</label> <?php FrmAppHelper::wp_roles_dropdown( $frm_role, $frm_settings->$frm_role ) ?>
+                        <div class="clear"></div>
                     <?php } ?>
                     
                 </td>    

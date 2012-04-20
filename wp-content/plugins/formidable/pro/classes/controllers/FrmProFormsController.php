@@ -22,32 +22,51 @@ class FrmProFormsController{
     function process_bulk_form_actions($errors){
         if(!isset($_POST)) return;
         global $frm_form;
-        $bulkaction = '-1';
         
-        if(isset($_POST['bulkaction']) and $_POST['bulkaction'] != '-1')
-            $bulkaction = $_POST['bulkaction'];
-        else if(isset($_POST['bulkaction2']) and $_POST['bulkaction2'] != '-1')
-            $bulkaction = $_POST['bulkaction2'];
+        $bulkaction = FrmAppHelper::get_param('action');
+        if($bulkaction == -1)
+            $bulkaction = FrmAppHelper::get_param('action2');
 
-        if (isset($_POST['item-action']) and $_POST['item-action'] == ''){
-            $errors[] = __('No forms were specified', 'formidable');
-        }else if($bulkaction == 'export'){
-            $controller = 'forms';
-            $ids = array_keys($_POST['item-action']);
-            $ids = implode(',', $ids);
-            if(isset($_GET['page']) and $_GET['page'] == 'formidable-templates')
-                $is_template = true;
-            include_once(FRMPRO_VIEWS_PATH.'/shared/xml.php');
+        if(!empty($bulkaction) and strpos($bulkaction, 'bulk_') === 0){
+            if(isset($_GET) and isset($_GET['action']))
+                $_SERVER['REQUEST_URI'] = str_replace('&action='.$_GET['action'], '', $_SERVER['REQUEST_URI']);
+            if(isset($_GET) and isset($_GET['action2']))
+                $_SERVER['REQUEST_URI'] = str_replace('&action='.$_GET['action2'], '', $_SERVER['REQUEST_URI']);
+            
+            $bulkaction = str_replace('bulk_', '', $bulkaction);
         }else{
-            if(!current_user_can('frm_delete_forms')){
-                global $frm_settings;
-                $errors[] = $frm_settings->admin_permission;
-            }else if(isset($_POST['item-action'])){
-                $forms = array_keys($_POST['item-action']);
-                if(is_array($forms)){
-                    if($bulkaction == 'delete'){
-                        foreach($forms as $form_id)
-                            $frm_form->destroy($form_id);
+            $bulkaction = '-1';
+            if(isset($_POST['bulkaction']) and $_POST['bulkaction'] != '-1')
+                $bulkaction = $_POST['bulkaction'];
+            else if(isset($_POST['bulkaction2']) and $_POST['bulkaction2'] != '-1')
+                $bulkaction = $_POST['bulkaction2'];
+        }
+
+        $ids = FrmAppHelper::get_param('item-action', '');
+        if (empty($ids)){
+            $errors[] = __('No forms were specified', 'formidable');
+        }else{                
+            if($bulkaction == 'export'){
+                $controller = 'forms';
+                if(is_array($ids))
+                    $ids = implode(',', $ids);
+                
+                if(isset($_GET['page']) and $_GET['page'] == 'formidable-templates')
+                    $is_template = true;
+                include_once(FRMPRO_VIEWS_PATH.'/shared/xml.php');
+            }else{
+                if(!current_user_can('frm_delete_forms')){
+                    global $frm_settings;
+                    $errors[] = $frm_settings->admin_permission;
+                }else{
+                    if(!is_array($ids))
+                        $ids = explode(',', $ids);
+                        
+                    if(is_array($ids)){
+                        if($bulkaction == 'delete'){
+                            foreach($ids as $form_id)
+                                $frm_form->destroy($form_id);
+                        }
                     }
                 }
             }
@@ -187,19 +206,30 @@ class FrmProFormsController{
         $id = $form->id;
         $langs = $sitepress->get_active_languages();
         ksort($langs);
+        $lang_count = (count($langs)-1);
+        
+        if(class_exists('FormidableWPML')){
+            $formidable_wpml = new FormidableWPML();
+            $formidable_wpml->get_translatable_items(array(), 'formidable', '');
+        }
+        
         $strings = $wpdb->get_results("SELECT id, name, value, language FROM {$wpdb->prefix}icl_strings
             WHERE context='formidable' AND name LIKE '{$id}_%' ORDER BY name DESC", OBJECT_K
         );
 
-        $translations = $wpdb->get_results("SELECT id, string_id, value, status, language 
-            FROM {$wpdb->prefix}icl_string_translations WHERE string_id in (". implode(',', array_keys($strings)).") 
-            ORDER BY language ASC"
-        );
-        $base_lang = reset($strings)->language;
-        $lang_count = (count($langs)-1);
+        if($strings){
+            $translations = $wpdb->get_results("SELECT id, string_id, value, status, language 
+                FROM {$wpdb->prefix}icl_string_translations WHERE string_id in (". implode(',', array_keys($strings)).") 
+                ORDER BY language ASC"
+            );
+            $base_lang = reset($strings)->language;
+            $col_order = array($base_lang);
+        }else{
+            $base_lang = reset($langs);
+        }
+        
         $fields = $frm_field->getAll(array('fi.form_id' => $id), 'field_order');
         $values = FrmAppHelper::setup_edit_vars($form, 'forms', $fields, true);
-        $col_order = array($base_lang);
         
         include(FRMPRO_VIEWS_PATH . '/frmpro-forms/translate.php');
     }
@@ -226,7 +256,7 @@ class FrmProFormsController{
     }
     
     function template_action_links($form){
-        echo '| <span><a href="'.FRM_SCRIPT_URL.'&controller=forms&action=export&id='. $form->id .'" title="'. __('Export Template', 'formidable') . ' '. $form->name .'">'. __('Export Template', 'formidable') .'</a></span>';
+        echo '| <span><a href="'.FRM_SCRIPT_URL.'&controller=forms&frm_action=export&id='. $form->id .'" title="'. __('Export Template', 'formidable') . ' '. $form->name .'">'. __('Export Template', 'formidable') .'</a></span>';
     }
     
     function export_template($form_id){

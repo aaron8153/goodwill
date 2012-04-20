@@ -21,7 +21,25 @@ define('FRM_WIDGETS_PATH',FRMPRO_PATH.'/classes/widgets');
 require_once(FRMPRO_MODELS_PATH.'/FrmProSettings.php');
 
 global $frmpro_settings;
-//delete_option('frmpro_options');
+
+$frmpro_settings = get_transient('frmpro_options');
+if(!is_object($frmpro_settings)){
+    if($frmpro_settings){ //workaround for W3 total cache conflict
+        $frmpro_settings = unserialize(serialize($frmpro_settings));
+    }else{
+        $frmpro_settings = get_option('frmpro_options');
+
+        // If unserializing didn't work
+        if(!is_object($frmpro_settings)){
+            if($frmpro_settings) //workaround for W3 total cache conflict
+                $frmpro_settings = unserialize(serialize($frmpro_settings));
+            else
+                $frmpro_settings = new FrmProSettings();
+            update_option('frmpro_options', $frmpro_settings);
+            set_transient('frmpro_options', $frmpro_settings);
+        }
+    }
+}
 $frmpro_settings = get_option('frmpro_options');
 
 // If unserializing didn't work
@@ -38,8 +56,10 @@ $frmpro_settings->set_default_options();
 global $frm_readonly;
 $frm_readonly = false;
 
-global $frm_show_fields, $frm_rte_loaded, $frm_datepicker_loaded, $frm_timepicker_loaded, $frm_hidden_fields, $frm_calc_fields;
-$frm_show_fields = $frm_rte_loaded = $frm_datepicker_loaded = $frm_timepicker_loaded = $frm_hidden_fields = $frm_calc_fields = array();
+global $frm_show_fields, $frm_rte_loaded, $frm_datepicker_loaded;
+global $frm_timepicker_loaded, $frm_hidden_fields, $frm_calc_fields, $frm_input_masks;
+$frm_show_fields = $frm_rte_loaded = $frm_datepicker_loaded = $frm_timepicker_loaded = array();
+$frm_hidden_fields = $frm_calc_fields = $frm_input_masks = array();
 
 global $frm_settings;
 if(!is_admin() and $frm_settings->jquery_css)

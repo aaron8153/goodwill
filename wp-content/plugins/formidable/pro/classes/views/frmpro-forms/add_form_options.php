@@ -47,7 +47,7 @@
 
 <tr class="hide_editable">
     <td style="padding-left:45px;" valign="top"><label><?php _e('Update Confirmation Message', 'formidable') ?></label></td>
-    <td><textarea name="options[edit_msg]" cols="50" rows="4"><?php echo $values['edit_msg']; ?></textarea></td>
+    <td><textarea name="options[edit_msg]" cols="50" rows="4"><?php echo FrmAppHelper::esc_textarea($values['edit_msg']); ?></textarea></td>
 </tr>
 
 <tr><td><input type="checkbox" name="options[single_entry]" id="single_entry" value="1"<?php echo ($values['single_entry'])?(' checked="checked"'):(''); ?> /> <label for="single_entry"><?php _e('Allow Only One Entry for Each', 'formidable') ?></label></td>

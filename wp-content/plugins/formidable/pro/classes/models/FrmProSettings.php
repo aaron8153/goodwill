@@ -1,5 +1,6 @@
 <?php
 class FrmProSettings{
+    var $form_width;
     var $edit_msg;
     var $update_value;
     var $already_submitted;
@@ -111,6 +112,7 @@ class FrmProSettings{
             'theme_css' => 'ui-lightness',
             'theme_name' => 'UI Lightness',
             
+            'form_width' => '700px',
             'form_align' => 'left', 
             'fieldset' => '0px', 
             'fieldset_color' => '000000',
@@ -134,7 +136,7 @@ class FrmProSettings{
             'description_align' => 'left',
             
             'field_font_size' => '13px',
-            'field_width' => '400px',
+            'field_width' => '100%',
             'auto_width' => false,
             'field_pad' => '2px',
             'field_margin' => '20px',
@@ -208,8 +210,13 @@ class FrmProSettings{
         $settings = $this->default_options();
         
         foreach($settings as $setting => $default){
-            if(!isset($this->{$setting}))
-                $this->{$setting} = $default;
+            if(!isset($this->{$setting})){
+                //set form width at 100% for existing users, but use default for new ones
+                if($setting == 'form_width' and $settings['field_width'] != '100%')
+                    $this->{$setting} = '100%';
+                else
+                    $this->{$setting} = $default;
+            }
         }
 
         $this->font = stripslashes($this->font);
@@ -222,17 +229,28 @@ class FrmProSettings{
 
     function update($params){
         $this->date_format = $params['frm_date_format'];
-        if($this->date_format == 'Y/m/d')
-            $this->cal_date_format = 'yy/mm/dd';
-        else if($this->date_format == 'd/m/Y')
-            $this->cal_date_format = 'dd/mm/yy';
-        else if($this->date_format == 'Y-m-d')
-            $this->cal_date_format = 'yy-mm-dd';
-        else if($this->date_format == 'j-m-Y')
-            $this->cal_date_format == 'd-mm-yy';
-        else
-            $this->cal_date_format = 'mm/dd/yy';
-        
+        switch($this->date_format){
+            case 'Y/m/d':
+                $this->cal_date_format = 'yy/mm/dd';
+            break;
+            case 'd/m/Y':
+                $this->cal_date_format = 'dd/mm/yy';
+            break;
+            case 'd.m.Y':
+                $this->cal_date_format = 'dd.mm.yy';
+                break;
+            case 'j/m/y':
+                $this->cal_date_format = 'd/mm/y';
+            break;
+            case 'Y-m-d':
+                $this->cal_date_format = 'yy-mm-dd';
+            break;
+            case 'j-m-Y':
+                $this->cal_date_format = 'd-mm-yy';
+            break;
+            default:
+                $this->cal_date_format = 'mm/dd/yy';
+        }
         
         $this->permalinks = isset($params['frm_permalinks']) ? $params['frm_permalinks'] : 0;
         
@@ -256,6 +274,9 @@ class FrmProSettings{
         // Save the posted value in the database
         update_option( 'frmpro_options', $this);
         
+        delete_transient('frmpro_options');
+        set_transient('frmpro_options', $this);
+        
         $filename = FRMPRO_PATH .'/css/custom_theme.css.php';
         if (is_file($filename)) {
             $uploads = wp_upload_dir();
@@ -271,13 +292,13 @@ class FrmProSettings{
               
             $saving = true;
             $css = $warn = "/* WARNING: Any changes made to this file will be lost when your Formidable settings are updated */";
-            $css .= "\n\n";
+            $css .= "\n";
             ob_start();
             include $filename;
             //system($filename);
             $css .= ob_get_contents();
             ob_end_clean();
-            $css .= "\n\n ". $warn;
+            $css .= "\n ". $warn;
             
             $css_file = $target_path .'/formidablepro.css';
             if ($fp = fopen($css_file, 'w')){
@@ -290,7 +311,10 @@ class FrmProSettings{
             	@chmod( $css_file, $perms );
             }
             
-            update_option( 'frmpro_css', $css);
+            update_option('frmpro_css', $css);
+            
+            delete_transient('frmpro_css');
+            set_transient('frmpro_css', $css);
         }
     }
   

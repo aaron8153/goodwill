@@ -16,19 +16,28 @@ class FrmProDisplaysController{
         add_filter('frm_before_display_content', array(&$this, 'calendar_header'), 10, 3);
         add_filter('frm_display_entries_content', array(&$this, 'build_calendar'), 10, 5);
         add_filter('frm_after_display_content', array(&$this, 'calendar_footer'), 10, 3);
+        add_filter('set-screen-option', array(&$this, 'save_per_page'), 10, 3);
         
         //Shortcodes
         add_shortcode('display-frm-data', array(&$this, 'get_shortcode'), 1);
     }
     
     function menu(){
+        global $frm_settings;
+        
         add_submenu_page('formidable', 'Formidable | '. __('Custom Displays', 'formidable'), __('Custom Displays', 'formidable'), 'frm_edit_displays', 'formidable-entry-templates', array(&$this, 'route'));
+        
+        if(class_exists('WP_List_Table')){        
+        add_filter('manage_'. sanitize_title($frm_settings->menu) .'_page_formidable-entry-templates_columns', array(&$this, 'manage_columns'));
+        add_filter('manage_'. sanitize_title($frm_settings->menu) .'_page_formidable-entry-templates_sortable_columns', array(&$this, 'sortable_columns'));
+        add_filter('get_user_option_manage'. sanitize_title($frm_settings->menu) .'_page_formidable-entry-templatescolumnshidden', array(&$this, 'hidden_columns'));
+        }
     }
     
     function frm_nav($nav){
         if(current_user_can('frm_edit_displays')){
             $nav['formidable-entry-templates'] = __('Custom Displays', 'formidable');
-            //$nav['formidable-entry-templates&action=new'] = __('New Custom Display', 'formidable');
+            //$nav['formidable-entry-templates&frm_action=new'] = __('New Custom Display', 'formidable');
         }
         return $nav;
     }
@@ -36,12 +45,12 @@ class FrmProDisplaysController{
     function get_content($content){
         global $post, $frmpro_display;
         if(!$post) return $content;
-        
+
         $display = $entry_id = false;
         if(is_single() or is_page()){
             global $frmdb, $frmprodb;
             //get entry with post_id
-            $entry = $frmdb->get_one_record($frmdb->entries, array('post_id' => $post->ID), $fields='id,form_id');
+            $entry = $frmdb->get_one_record($frmdb->entries, array('post_id' => $post->ID), $fields='id,item_key,form_id');
             if($entry){
                 $display = FrmProDisplay::getAll( "form_id=".$entry->form_id." and show_count in ('single', 'dynamic', 'calendar')", '', ' LIMIT 1' );
                 $entry_id = $entry->id;
@@ -69,20 +78,15 @@ class FrmProDisplaysController{
             
             $frm_display_position[$display->id]++;
             
-            //make sure this isn't loaded multiple times but still works with themes like Thesis
-            if(!in_array($display->id, (array)$frm_displayed) and $frm_display_position[$display->id] == (int)$display->options['insert_pos']){ 
+            //make sure this isn't loaded multiple times but still works with themes and plugins that call the_content multiple times
+            if(in_the_loop() and !in_array($display->id, (array)$frm_displayed) and $frm_display_position[$display->id] >= (int)$display->options['insert_pos']){ 
+                $entry_id = (in_array($display->show_count, array('dynamic', 'calendar')) and $display->type == 'display_key') ? ($entry_id ? $entry->item_key : $entry_id) : $entry_id;
                 $frm_displayed[] = $display->id;  
                 $content = $this->get_display_data($display, $content, $entry_id); 
             }   
         }
 
         return $content;
-    }
-    
-    function search_list(){
-        $params = $this->get_params();
-        $errors = apply_filters('frm_admin_list_form_action', $errors);
-        return $this->display_list($params, '', false, false, $errors);
     }
     
     function new_form(){
@@ -102,6 +106,7 @@ class FrmProDisplaysController{
             $values = FrmProDisplaysHelper::setup_new_vars();
             require_once(FRMPRO_VIEWS_PATH.'/displays/new.php');
         }else{
+            $_SERVER['REQUEST_URI'] = str_replace('&frm_action=new', '', $_SERVER['REQUEST_URI']);
             if($record = $frmpro_display->create( $_POST ))
                 $message = __('Custom Display was Successfully Created', 'formidable');
             else
@@ -165,19 +170,24 @@ class FrmProDisplaysController{
         $this->display_list($params, $message, '', 1);
     }
     
-    function bulk_actions(){
+    function bulk_actions($action=''){
         $params = $this->get_params();
         $errors = '';
         $bulkaction = '-1';
-        if($_POST['bulkaction'] != '-1')
-          $bulkaction = $_POST['bulkaction'];
-        else if($_POST['bulkaction2'] != '-1')
-          $bulkaction = $_POST['bulkaction2'];
+        
+        if($action == 'list-form'){
+            if($_POST['bulkaction'] != '-1')
+                $bulkaction = $_POST['bulkaction'];
+            else if($_POST['bulkaction2'] != '-1')
+                $bulkaction = $_POST['bulkaction2'];
+        }else{
+            $bulkaction = str_replace('bulk_', '', $action);
+        }
 
-        if ($_POST['item-action'] == ''){
+        if (empty($_REQUEST['item-action'])){
             $errors[] = __('No displays were specified', 'formidable');
         }else{
-            $items = array_keys($_POST['item-action']);
+            $items = $_REQUEST['item-action'];
             
             if($bulkaction == 'delete'){
                 if(!current_user_can('frm_edit_displays')){
@@ -229,13 +239,13 @@ class FrmProDisplaysController{
     function calendar_header($content, $display, $show='one'){
         if($display->show_count != 'calendar' or $show == 'one') return $content;
         
-        global $frm_load_css;
+        global $frm_load_css, $wp_locale;
         $frm_load_css = true;
         
-        $year = FrmAppHelper::get_param('frmcal-year', date('Y')); //4 digit year
-        $month = FrmAppHelper::get_param('frmcal-month', date('n')); //Numeric month without leading zeros
-        $month_names = array('', __("January", 'formidable'), __("February", 'formidable'), __("March", 'formidable'), __("April", 'formidable'), __("May", 'formidable'), __("June", 'formidable'), __("July", 'formidable'), __("August", 'formidable'), __("September", 'formidable'), __("October", 'formidable'), __("November", 'formidable'), __("December", 'formidable'));
-        $day_names = array(__("Sunday", 'formidable'), __("Monday", 'formidable'), __("Tuesday", 'formidable'), __("Wednesday", 'formidable'), __("Thursday", 'formidable'), __("Friday", 'formidable'), __("Saturday", 'formidable'));
+        $year = FrmAppHelper::get_param('frmcal-year', date_i18n('Y')); //4 digit year
+        $month = FrmAppHelper::get_param('frmcal-month', date_i18n('m')); //Numeric month without leading zeros
+        
+        $month_names = $wp_locale->month;
         
         $prev_year = $next_year = $year;
 
@@ -246,10 +256,17 @@ class FrmProDisplaysController{
             $prev_month = 12;
             $prev_year = $year - 1;
         }
+        
         if ($next_month == 13 ) {
             $next_month = 1;
             $next_year = $year + 1;
         }
+        
+        if($next_month < 10)
+            $next_month = '0'. $next_month;
+        
+        if($prev_month < 10)
+            $prev_month = '0'. $prev_month;
         
         ob_start();
         include(FRMPRO_VIEWS_PATH.'/displays/calendar-header.php');
@@ -261,17 +278,23 @@ class FrmProDisplaysController{
     function build_calendar($new_content, $entries, $shortcodes, $display, $show='one'){
         if(!$display or $display->show_count != 'calendar') return $new_content;
         
-        global $frm_entry_meta;
+        global $frm_entry_meta, $wp_locale;
         
         $display_options = maybe_unserialize($display->options);
         
+        $current_year = date_i18n('Y');
+        $current_month = date_i18n('n');
+        
         $year = FrmAppHelper::get_param('frmcal-year', date('Y')); //4 digit year
-        $month = FrmAppHelper::get_param('frmcal-month', date('n')); //Numeric month without leading zeros
+        $month = FrmAppHelper::get_param('frmcal-month', $current_month); //Numeric month without leading zeros
         
         $timestamp = mktime(0, 0, 0, $month, 1, $year);
         $maxday = date('t', $timestamp); //Number of days in the given month
         $this_month = getdate($timestamp);
         $startday = $this_month['wday'];
+        
+        if($current_year == $year and $current_month == $month)
+            $today = date_i18n('j');
         
         $cal_end = $maxday+$startday;
         $t = ($cal_end > 35) ? 42 : (($cal_end == 28) ? 28 : 35);
@@ -285,6 +308,8 @@ class FrmProDisplaysController{
             
         if(isset($display_options['edate_field_id']) and is_numeric($display_options['edate_field_id']))
             $efield = FrmField::getOne($display_options['edate_field_id']);
+        else
+            $efield = false;
             
         foreach ($entries as $entry){
             if(isset($display_options['date_field_id']) and is_numeric($display_options['date_field_id'])){
@@ -303,44 +328,44 @@ class FrmProDisplaysController{
                 }
             }else if($display_options['date_field_id'] == 'updated_at'){
                 $date = $entry->updated_at;
+                $i18n = true;
             }else{
                 $date = $entry->created_at;
+                $i18n = true;
             }
             if(empty($date)) continue;
             
-            $dates = array(date('Y-m-d', strtotime($date)));
+            if(isset($il8n) and $il8n)
+                $date = date_i18n('Y-m-d', strtotime($date));
+            else
+                $date = date('Y-m-d', strtotime($date));
+                
+            unset($i18n);
+            $dates = array($date);
             
             if(isset($display_options['edate_field_id']) and !empty($display_options['edate_field_id'])){
-                if(is_numeric($display_options['edate_field_id'])){
-                    if(isset($entry->metas))
-                        $edate = isset($entry->metas[$display_options['edate_field_id']]) ? $entry->metas[$display_options['edate_field_id']] : false;
-                    else
-                        $edate = $frm_entry_meta->get_entry_meta_by_field($entry->id, $display_options['date_field_id']);
-                    
-                    if($entry->post_id and !$edate){
-                        if($field){
-                            $field->field_options = maybe_unserialize($field->field_options);
-                            if($field->field_options['post_field']){
-                                $edate = FrmProEntryMetaHelper::get_post_value($entry->post_id, $field->field_options['post_field'], $field->field_options['custom_field'], array('form_id' => $display->form_id, 'type' => $field->type, 'field' => $field));
-                            }
-                        }
-                    }
+                if(is_numeric($display_options['edate_field_id']) and $efield){
+                    $edate = FrmProEntryMetaHelper::get_post_or_meta_value($entry, $efield);
                     
                     if($efield and $efield->type == 'number' and is_numeric($edate))
                         $edate = date('Y-m-d', strtotime('+'. $edate .' days', strtotime($date)));
                     
                 }else if($display_options['edate_field_id'] == 'updated_at'){
-                    $edate = $entry->updated_at;
+                    $edate = date_i18n('Y-m-d', strtotime($entry->updated_at));
                 }else{
-                    $edate = $entry->created_at;
+                    $edate = date_i18n('Y-m-d', strtotime($entry->created_at));
                 }
 
                 if($edate and !empty($edate)){
-                    $from_date = strtotime($date);
+                    $from_date = strtotime($date);                    
                     $to_date = strtotime($edate);
-                    for($current_ts = $from_date; $current_ts <= $to_date; $current_ts += (60*60*24))
-                        $dates[] = date('Y-m-d', $current_ts);
-                    unset($current_ts);
+                    
+                    if(!empty($from_date) and $from_date < $to_date){
+                        for($current_ts = $from_date; $current_ts <= $to_date; $current_ts += (60*60*24))
+                            $dates[] = date('Y-m-d', $current_ts);
+                        unset($current_ts);
+                    }
+                    
                     unset($from_date);
                     unset($to_date);
                 }
@@ -364,6 +389,9 @@ class FrmProDisplaysController{
             }
             unset($dates);
         }
+        
+        $day_names = $wp_locale->weekday_abbrev;
+        $day_names = FrmProAppHelper::reset_keys($day_names); //switch keys to order
 
         ob_start();
         include(FRMPRO_VIEWS_PATH.'/displays/calendar.php');
@@ -381,6 +409,66 @@ class FrmProDisplaysController{
         ob_end_clean();
         return $content;
     }
+    
+    function manage_columns($columns){
+        
+        $columns['cb'] = '<input type="checkbox" />';
+        $columns['id'] = 'ID';
+        $columns['name'] = __('Name', 'formidable');
+        $columns['description'] = __('Description', 'formidable');
+        $columns['form_id'] = __('Form', 'formidable');
+        $columns['show_count'] = __('Entry', 'formidable');
+        $columns['post_id'] = __('Page', 'formidable');
+        $columns['content'] = __('Content', 'formidable');
+        $columns['dyncontent'] = __('Dynamic Content', 'formidable');
+        $columns['created_at'] = __('Date', 'formidable');
+        $columns['display_key'] = __('Key', 'formidable');
+        $columns['shortcode'] = __('ShortCode', 'formidable');
+        
+
+        add_screen_option( 'per_page', array('label' => __('Custom Displays', 'formidable'), 'default' => 20, 'option' => 'formidable_page_formidable_entry_templates_per_page') );
+        
+        return $columns;
+    }
+    
+    function save_per_page($save, $option, $value){
+        if($option == 'formidable_page_formidable_entry_templates_per_page')
+            $save = (int)$value;
+        return $save;
+    }
+    
+    function sortable_columns(){
+        return array(
+            'id'            => 'id',
+            'name'          => 'name',
+            'description'   => 'description',
+            'display_key'   => 'display_key',
+            'show_count'    => 'show_count',
+            'content'       => 'content',
+            'dyncontent'    => 'dyncontent',
+            'created_at'    => 'created_at',
+            'shortcode'     => 'id'
+        );
+    }
+    
+    function hidden_columns($result){
+        $return = false;
+        foreach((array)$result as $r){
+            if(!empty($r)){
+                $return = true;
+                break;
+            }
+        }
+        
+        if($return)
+            return $result;
+
+        $result[] = 'content';
+        $result[] = 'dyncontent';
+        $result[] = 'created_at';
+                
+        return $result;
+    }
 
     function display_list($params=false, $message='', $page_params_ov = false, $current_page_ov = false, $errors = array()){
         global $wpdb, $frmprodb, $frmpro_display, $frm_form, $frm_app_helper, $frm_page_size;
@@ -391,24 +479,43 @@ class FrmProDisplaysController{
         if($message=='')
             $message = FrmAppHelper::frm_get_main_message();
 
-        $page_params = '&action=0';
-        $where_clause = '';
+        $form = $params['form'];
+        
+        if(class_exists('WP_List_Table')){
+            require_once( FRMPRO_PATH .'/classes/helpers/FrmProListHelper.php' );
 
-        $form_vars = $this->get_form_sort_vars($params, $where_clause);
+            $wp_list_table = new FrmProListHelper(array('singular' => 'display', 'plural' => 'displays', 'table_name' => $frmprodb->displays, 'page_name' => 'entry-templates', 'params' => $params));
 
-        $current_page = ($current_page_ov) ? $current_page_ov : $params['paged'];
-        $page_params = ($page_params_ov) ? $page_params_ov : $form_vars['page_params'];
+            $pagenum = $wp_list_table->get_pagenum();
 
-        $sort_str = $form_vars['sort_str'];
-        $sdir_str = $form_vars['sdir_str'];
-        $search_str = $form_vars['search_str'];
-        $form = $form_vars['form'];
+            $wp_list_table->prepare_items();
 
-        $record_count = $frm_app_helper->getRecordCount($form_vars['where_clause'], $frmprodb->displays);
-        $page_count = $frm_app_helper->getPageCount($frm_page_size, $record_count, $frmprodb->displays);
-        $displays = $frm_app_helper->getPage($current_page, $frm_page_size, $form_vars['where_clause'], $form_vars['order_by'], $frmprodb->displays);
-        $page_last_record = $frm_app_helper->getLastRecordNum($record_count,$current_page,$frm_page_size);
-        $page_first_record = $frm_app_helper->getFirstRecordNum($record_count,$current_page,$frm_page_size);
+            $total_pages = $wp_list_table->get_pagination_arg( 'total_pages' );
+            if ( $pagenum > $total_pages && $total_pages > 0 ) {
+            	wp_redirect( add_query_arg( 'paged', $total_pages ) );
+            	exit;
+            }
+            
+        }else{
+            $page_params = '&action=0&frm_action=0';
+            $where_clause = '';
+
+            $form_vars = $this->get_form_sort_vars($params, $where_clause);
+
+            $current_page = ($current_page_ov) ? $current_page_ov : $params['paged'];
+            $page_params = ($page_params_ov) ? $page_params_ov : $form_vars['page_params'];
+
+            $sort_str = $form_vars['sort_str'];
+            $sdir_str = $form_vars['sdir_str'];
+            $search_str = $form_vars['search_str'];
+            $form = $form_vars['form'];
+
+            $record_count = $frm_app_helper->getRecordCount($form_vars['where_clause'], $frmprodb->displays);
+            $page_count = $frm_app_helper->getPageCount($frm_page_size, $record_count, $frmprodb->displays);
+            $displays = $frm_app_helper->getPage($current_page, $frm_page_size, $form_vars['where_clause'], $form_vars['order_by'], $frmprodb->displays);
+            $page_last_record = $frm_app_helper->getLastRecordNum($record_count,$current_page,$frm_page_size);
+            $page_first_record = $frm_app_helper->getFirstRecordNum($record_count,$current_page,$frm_page_size);
+        }
         require_once(FRMPRO_VIEWS_PATH.'/displays/list.php');
     }
     
@@ -430,7 +537,7 @@ class FrmProDisplaysController{
                 if(!empty($where_clause))
                     $where_clause .= " AND";
 
-                $where_clause .= " (name like '%$search_param%' OR description like '%$search_param%' OR created_at like '%$search_param%')";
+                $where_clause .= " (name like '%$search_param%' OR description like '%$search_param%' OR created_at like '%$search_param%' OR content like '%$search_param%' OR dyncontent like '%$search_param%')";
             }
 
             $page_params .="&search=$search_str";
@@ -505,9 +612,18 @@ class FrmProDisplaysController{
     /* ShortCodes */
     function get_shortcode($atts){
         global $frmpro_display;
-        extract(shortcode_atts(array('id' => '', 'entry_id' => '', 'filter' => false, 'user_id' => false, 'limit' => '', 'page_size' => '', 'order_by' => '', 'order' => ''), $atts));
+        extract(shortcode_atts(array(
+            'id' => '', 'entry_id' => '', 'filter' => false, 
+            'user_id' => false, 'limit' => '', 'page_size' => '', 
+            'order_by' => '', 'order' => '', 'get' => '', 'get_value' => ''
+        ), $atts));
         //if (is_numeric($id))
             $display = $frmpro_display->getOne($id);
+        
+        $user_id = FrmProAppHelper::get_user_id_param($user_id);
+        
+        if(!empty($get))
+            $_GET[$get] = $get_value;
         
         if ($display)    
             return FrmProDisplaysController::get_display_data($display, '', $entry_id, compact('filter', 'user_id', 'limit', 'page_size', 'order_by', 'order')); 
@@ -538,23 +654,39 @@ class FrmProDisplaysController{
    
         if (is_numeric($display->entry_id) && $display->entry_id > 0 and !$entry_id)
             $entry_id = $display->entry_id;
-
-        $get_param = (isset($_GET[$display->param])) ? $_GET[$display->param] : ((isset($_GET['entry'])) ? $_GET['entry'] : $entry_id);
         
         $entry = false;
-        if ($get_param){
-            $where_entry = array('it.form_id' => $display->form_id);
-            if(is_numeric($get_param))
-                $where_entry['it.id'] = $get_param;
-            else
-                $where_entry['it.item_key'] = $get_param;
-            $entry = $frm_entry->getAll($where_entry, '', 1, 0);
-            if($entry)
-                $entry = reset($entry);
-        }
 
         $show = 'all';
-        if (($display->show_count == 'dynamic' or $display->show_count == 'calendar') and $entry){
+        if (in_array($display->show_count, array('dynamic', 'calendar', 'one'))){
+            $one_param = (isset($_GET['entry'])) ? $_GET['entry'] : $entry_id;
+            $get_param = (isset($_GET[$display->param])) ? $_GET[$display->param] : (($display->show_count == 'one') ? $one_param : $entry_id);
+            unset($one_param);
+            
+            if ($get_param){
+                $where_entry = array('it.form_id' => $display->form_id);
+                if(($display->type == 'id' or $display->show_count == 'one') and is_numeric($get_param))
+                    $where_entry['it.id'] = $get_param;
+                else
+                    $where_entry['it.item_key'] = $get_param;
+                $entry = $frm_entry->getAll($where_entry, '', 1, 0);
+                if($entry)
+                    $entry = reset($entry);
+                    
+                if($entry and $entry->post_id){
+                    //redirect to single post page if this entry is a post
+                    global $post;
+                    if(in_the_loop() and $display->show_count != 'one' and !is_single($entry->post_id) and $post->ID != $entry->post_id){
+                        $this_post = get_post($entry->post_id);
+                        if(in_array($this_post->post_status, array('publish', 'private')))
+                            die('<script type="text/javascript">window.location="'. get_permalink($entry->post_id) .'"</script>');
+                    }
+                }
+            }
+            unset($get_param);
+        }
+
+        if($entry and in_array($display->show_count, array('dynamic', 'calendar'))){    
             $new_content = stripslashes($display->dyncontent);
             $show = 'one';
         }else{
@@ -581,8 +713,13 @@ class FrmProDisplaysController{
             $where = 'it.form_id='.$display->form_id;
             
             $form_posts = $frmdb->get_records($frmdb->entries, array('form_id' => $display->form_id, 'post_id >' => 1), '', '', 'id,post_id');
-            $entry_ids = array();
+            $entry_ids = $frmdb->get_col($frmdb->entries, array('form_id' => $display->form_id), 'id');
             $after_where = false;
+            
+            if($user_id and !empty($user_id)){
+                $user_id = FrmProAppHelper::get_user_id_param($user_id);
+                $uid_used = false;
+            }
             
             if(isset($options['where']) and !empty($options['where'])){
                 $options['where'] = apply_filters('frm_custom_where_opt', $options['where'], array('display' => $display, 'entry' => $entry));
@@ -591,7 +728,7 @@ class FrmProDisplaysController{
                     $where_val = isset($options['where_val'][$where_key]) ? $options['where_val'][$where_key] : '';
 
                     if (preg_match("/\[(get|get-(.?))\b(.*?)(?:(\/))?\]/s", $where_val)){
-                        $where_val = FrmProFieldsHelper::get_default_value($where_val, false);
+                        $where_val = FrmProFieldsHelper::get_default_value($where_val, false, true, true);
                         
                         //if this param doesn't exist, then don't include it
                         if($where_val == '') {
@@ -600,7 +737,7 @@ class FrmProDisplaysController{
                             continue;
                         }
                     }else{
-                        $where_val = FrmProFieldsHelper::get_default_value($where_val, false);
+                        $where_val = FrmProFieldsHelper::get_default_value($where_val, false, true, true);
                     }
                     
                     $continue = false;
@@ -608,6 +745,7 @@ class FrmProDisplaysController{
                     if($where_val == 'current_user'){
                         if($user_id and is_numeric($user_id)){
                             $where_val = $user_id;
+                            $uid_used = true;
                         }else{
                             global $user_ID;
                             $where_val = $user_ID;
@@ -616,6 +754,32 @@ class FrmProDisplaysController{
                     
                     $where_val = do_shortcode($where_val);
                     
+                    if(is_array($where_val) and !empty($where_val)){
+                        $new_where = '(';
+                        if(strpos($options['where_is'][$where_key], 'LIKE') !== false){
+                            foreach($where_val as $w){
+                                if($new_where != '(')
+                                    $new_where .= ',';
+                                $new_where .= "'%". esc_sql(like_escape($w)). "%'";
+                                unset($w);
+                            }
+                        }else{
+                            foreach($where_val as $w){
+                                if($new_where != '(')
+                                    $new_where .= ',';
+                                $new_where .= "'". esc_sql($w) ."'";
+                                unset($w);
+                            }
+                        }
+                        $new_where .= ')';
+                        $where_val = $new_where;
+                        unset($new_where);
+                        
+                        if(strpos($options['where_is'][$where_key], '!') === false and strpos($options['where_is'][$where_key], 'not') === false)
+                            $options['where_is'][$where_key] = ' in ';
+                        else
+                            $options['where_is'][$where_key] = ' not in ';
+                    }
                     
                     if(is_numeric($where_opt)){
                         $entry_ids = FrmProAppHelper::filter_where($entry_ids, array(
@@ -624,12 +788,27 @@ class FrmProDisplaysController{
                             'after_where' => $after_where
                         ));
                         $after_where = true;
+                        $continue = false;
                         if(empty($entry_ids))
                             break;
                     }else if($where_opt == 'created_at'){
                         if($where_val == 'NOW')
-                            $where_val = date('Y-m-d H:i:s');
-                        $where .= " and it.created_at ".$where_is." '$where_val'";
+                            $where_val = current_time('mysql', 1);
+                        $where_val = date('Y-m-d H:i:s', strtotime($where_val));
+                        $where .= " and it.created_at ". $options['where_is'][$where_key];
+                        if(strpos($options['where_is'][$where_key], 'in'))
+                            $where .= " $where_val";
+                        else
+                            $where .= " '". esc_sql($where_val) ."'";
+                        $continue = true;
+                    }else if($where_opt == 'id' or $where_opt == 'item_key'){
+                        $where .= " and it.{$where_opt} ". $options['where_is'][$where_key];
+                        if(strpos($options['where_is'][$where_key], 'in'))
+                            $where .= " $where_val";
+                        else
+                            $where .= " '". esc_sql($where_val) ."'";
+                        
+                        $continue = true;
                     }
                     
                 }
@@ -637,6 +816,9 @@ class FrmProDisplaysController{
                 if(!$continue and empty($entry_ids)) 
                     return $content . ' '. $empty_msg;
             }
+            
+            if($user_id and is_numeric($user_id) and !$uid_used)
+                $where .= " AND it.user_id=". (int)$user_id;
 
             $s = FrmAppHelper::get_param('frm_search', false);
             if ($s){
@@ -652,7 +834,7 @@ class FrmProDisplaysController{
             }
             
             if(isset($entry_ids) and !empty($entry_ids))
-                $where .= ' and it.id in ('.implode(',',$entry_ids).')';
+                $where .= ' and it.id in ('.implode(',', $entry_ids).')';
             
             if ($entry_id)
                 $where .= " and it.id in ($entry_id)";
@@ -727,7 +909,12 @@ class FrmProDisplaysController{
                             }
                         }else{
                             if($order_field->type == 'number'){
-                                $query = "SELECT it.*, meta_value +0 as odr FROM $frmdb->entry_metas it LEFT OUTER JOIN $frmdb->fields fi ON it.field_id=fi.id WHERE fi.form_id=$display->form_id and fi.id={$options['order_by']} ORDER BY odr $order $limit";
+                                $query = "SELECT it.*, meta_value +0 as odr FROM $frmdb->entry_metas it LEFT OUTER JOIN $frmdb->fields fi ON it.field_id=fi.id WHERE fi.form_id=$display->form_id and fi.id={$options['order_by']}";
+                                if(isset($entry_ids) and !empty($entry_ids))
+                                    $query .= " AND it.item_id in (". implode(',', $entry_ids) .")";
+                                
+                                $query .= " ORDER BY odr $order $limit";
+                                
                                 if ($limit == ' LIMIT 1')
                                     $metas = $wpdb->get_row($query);
                                 else    
@@ -786,10 +973,10 @@ class FrmProDisplaysController{
                     $order_by = ' ORDER BY '.$order_by;
                 }
             }
-            
+
             if(!empty($page_size) and is_numeric($page_size))
                 $options['page_size'] = (int)$page_size;
-        
+
             if (isset($options['page_size']) && is_numeric($options['page_size'])){
                 global $frm_app_helper;
                 $current_page = FrmAppHelper::get_param('frm-page', 1);  
@@ -864,25 +1051,38 @@ class FrmProDisplaysController{
     }
     
     function route(){
-        $action = FrmAppHelper::get_param('action');
-        if($action=='new')
+        $action = FrmAppHelper::get_param('frm_action');
+            
+        if($action =='new')
             return $this->new_form();
-        else if($action=='create')
+        else if($action == 'create')
             return $this->create();
-        else if($action=='edit')
+        else if($action == 'edit')
             return $this->edit();
-        else if($action=='update')
+        else if($action == 'update')
             return $this->update();
-        else if($action=='duplicate')
+        else if($action == 'duplicate')
             return $this->duplicate();
         else if($action == 'destroy')
             return $this->destroy();
         else if($action == 'list-form')
-            return $this->bulk_actions();
-        else if($action == 'list')
-            return $this->search_list();        
-        else
-            return $this->display_list();
+            return $this->bulk_actions();     
+        else{
+            $action = FrmAppHelper::get_param('action');
+            if($action == -1)
+                $action = FrmAppHelper::get_param('action2');
+            
+            if(strpos($action, 'bulk_') === 0){
+                if(isset($_GET) and isset($_GET['action']))
+                    $_SERVER['REQUEST_URI'] = str_replace('&action='.$_GET['action'], '', $_SERVER['REQUEST_URI']);
+                if(isset($_GET) and isset($_GET['action2']))
+                    $_SERVER['REQUEST_URI'] = str_replace('&action='.$_GET['action2'], '', $_SERVER['REQUEST_URI']);
+                    
+                return $this->bulk_actions($action);
+            }else{
+                return $this->display_list();
+            }
+        }
     }
     
     function get_pagination_file($filename, $atts){

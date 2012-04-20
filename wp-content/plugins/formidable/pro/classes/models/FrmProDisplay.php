@@ -88,6 +88,8 @@ class FrmProDisplay{
         foreach ($fields as $field)
             $new_values[$field] = $values[$field];
             
+        $new_values['entry_id'] = isset($values['entry_id']) ? (int)$values['entry_id'] : 0;
+        
         if (isset($values['options'])){
             $new_values['options'] = array();
             foreach ($values['options'] as $key => $value)
@@ -170,6 +172,10 @@ class FrmProDisplay{
 
     function getAll( $where = '', $order_by = '', $limit = '' ){
         global $wpdb, $frmprodb, $frm_app_helper;
+        
+        if(is_numeric($limit))
+            $limit = " LIMIT {$limit}";
+            
         $query = 'SELECT * FROM ' . $frmprodb->displays . $frm_app_helper->prepend_and_or_where(' WHERE ', $where) . $order_by . $limit;
         if ($limit == ' LIMIT 1')
             $results = $wpdb->get_row($query);

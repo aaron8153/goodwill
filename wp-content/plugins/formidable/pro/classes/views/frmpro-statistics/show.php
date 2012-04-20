@@ -14,7 +14,7 @@
             <form method="get">
                 <div id="post-body">
                 <p><?php _e('Select a report to view.', 'formidable'); ?></p>
-                <input type="hidden" name="action" value="show" />
+                <input type="hidden" name="frm_action" value="show" />
                 <input type="hidden" name="page" value="formidable-reports" />
                 <?php FrmFormsHelper::forms_dropdown('form', '', false); ?><br/>
                 </div>
@@ -30,17 +30,20 @@
     <?php }else{
             FrmAppController::get_form_nav($form->id, true);
     ?>
-        <form method="get">
-            <input type="hidden" name="action" value="show" />
+        <form method="get" class="frm_no_print">
+            <input type="hidden" name="frm_action" value="show" />
             <input type="hidden" name="page" value="formidable-reports" />
             <p><?php FrmFormsHelper::forms_dropdown('form', '', __('Switch Form', 'formidable')); ?>
             <input type="submit" class="button-secondary" value="<?php _e('Go', 'formidable') ?>" /></p>
         </form>
 
         <div id="chart_time"></div>
+        <div id="img_chart_time" class="frm_print_graph"></div>
         <?php foreach ($fields as $field){ ?>
             <div style="margin-top:25px;">
-            <div class="alignleft"><div id="chart_<?php echo $field->id ?>"></div></div>
+            <div class="alignleft"><div id="chart_<?php echo $field->id ?>"></div>
+                <div id="img_chart_<?php echo $field->id ?>" class="frm_print_graph"></div>
+            </div>
             <div style="padding:10px; margin-top:40px;">
                 <p><?php _e('Response Count', 'formidable') ?>: <?php echo FrmProFieldsHelper::get_field_stats($field->id, 'count'); ?></p>
             <?php if(in_array($field->type, array('number', 'hidden'))){ ?>
@@ -62,8 +65,23 @@
             </div>
         <?php } 
     } ?>
+        <div id="chart_hour"></div>
+        <div id="chart_month"></div>
+        <div id="img_chart_month" class="frm_print_graph"></div>
+        <div id="chart_year"></div>
 </div>
 
 <script type="text/javascript">
-function frmRedirectToStats(form){if(form !='') window.location='?page=formidable-reports&action=show&form='+form}
+jQuery(window).bind("load", function(){
+//frmUploadImage('chart_time');
+OFC.jquery.rasterize('chart_time', 'img_chart_time');
+OFC.jquery.rasterize('chart_month', 'img_chart_month');
+<?php 
+if(isset($fields) and $fields){
+foreach ($fields as $field){ ?>
+OFC.jquery.rasterize('chart_<?php echo $field->id ?>', 'img_chart_<?php echo $field->id ?>');
+<?php } 
+} ?>
+});
+function frmRedirectToStats(form){if(form !='') window.location='?page=formidable-reports&frm_action=show&form='+form}
 </script>

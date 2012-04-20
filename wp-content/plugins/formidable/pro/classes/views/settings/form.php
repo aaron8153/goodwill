@@ -49,12 +49,11 @@
 <tr class="form-field">
     <td valign="top"><?php _e('Date Format', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('Change the format of the date used in the date field.', 'formidable') ?>" /></td>
     <td valign="top">
+        <?php $formats = array('m/d/Y', 'd/m/Y', 'd.m.Y', 'j-m-Y', 'j/m/y', 'Y/m/d', 'Y-m-d'); ?>
         <select name="frm_date_format">
-            <option value="m/d/Y" <?php echo ($frmpro_settings->date_format == 'm/d/Y')? 'selected="selected"' : ''; ?>><?php echo date('m/d/Y'); ?></option>
-            <option value="d/m/Y" <?php echo ($frmpro_settings->date_format == 'd/m/Y')? 'selected="selected"' : ''; ?>><?php echo date('d/m/Y'); ?></option>
-            <option value="j-m-Y" <?php echo ($frmpro_settings->date_format == 'j-m-Y')? 'selected="selected"' : ''; ?>><?php echo date('j-m-Y'); ?></option>
-            <option value="Y/m/d" <?php echo ($frmpro_settings->date_format == 'Y/m/d')? 'selected="selected"' : ''; ?>><?php echo date('Y/m/d'); ?></option>
-            <option value="Y-m-d" <?php echo ($frmpro_settings->date_format == 'Y-m-d')? 'selected="selected"' : ''; ?>><?php echo date('Y-m-d'); ?></option>
+            <?php foreach($formats as $f){ ?>
+            <option value="<?php echo esc_attr($f) ?>" <?php selected($frmpro_settings->date_format, $f); ?>><?php echo date($f); ?></option>
+            <?php } ?>
         </select>
 
     </td>
@@ -93,7 +92,8 @@
         <td width="250px" valign="top">
             <?php include('formroller.php'); ?>
         </td>
-        <td class="frm_sample_form with_frm_style">
+        <td class="frm_sample_form">
+            <div class="frm_forms with_frm_style">
             <div class="frm_form_fields">
             <fieldset>
               
@@ -104,29 +104,29 @@
             
             <div id="message" class="frm_message"><?php echo __('SAMPLE:', 'formidable') .' '. stripslashes($frm_settings->success_msg) ?></div>
             <?php $pos_class = ($frmpro_settings->position == 'none') ? 'frm_top_container' : 'frm_'. $frmpro_settings->position .'_container' ?>
-            <div class="form-field frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field frm_left_half form-field <?php echo $pos_class ?>">
             <label class="frm_primary_label"><?php _e('Text field', 'formidable') ?> <span class="frm_required">*</span></label>   
             <input type="text" value="<?php _e('This is sample text', 'formidable') ?>"/>
             <div class="frm_description"><?php _e('A field with a description', 'formidable') ?></div>
             </div>
             
-            <div class="form-field frm_pos_container frm_blank_field <?php echo $pos_class ?>">
+            <div class="frm_form_field frm_right_half form-field frm_focus_field <?php echo $pos_class ?>">
+            <label class="frm_primary_label"><?php _e('Text field in active state', 'formidable') ?> <span class="frm_required">*</span></label>   
+            <input type="text" value="<?php _e('The active state will be seen when the field is clicked', 'formidable') ?>" />
+            </div>
+            
+            <div class="frm_form_field form-field frm_blank_field <?php echo $pos_class ?>">
             <label class="frm_primary_label"><?php _e('Text field with error', 'formidable') ?> <span class="frm_required">*</span></label>   
             <input type="text" value="<?php _e('This is sample text', 'formidable') ?>"/>
             <div class="frm_error"><?php _e('This field cannot be blank', 'formidable') ?></div>
             </div>
             
-            <div class="form-field frm_pos_container frm_focus_field <?php echo $pos_class ?>">
-            <label class="frm_primary_label"><?php _e('Text field in active state', 'formidable') ?> <span class="frm_required">*</span></label>   
-            <input type="text" value="<?php _e('The active state will be seen when the field is clicked', 'formidable') ?>" />
-            </div>
-            
-            <div class="form-field frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field form-field <?php echo $pos_class ?>">
             <label class="frm_primary_label"><?php _e('File Upload', 'formidable') ?></label>   
             <input type="file"/>
             </div>
 
-            <div class="form-field frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field form-field <?php echo $pos_class ?>">
             <label class="frm_primary_label"><?php _e('Drop-down Select', 'formidable') ?></label>   
             <select>
                 <option value=""></option>
@@ -134,25 +134,25 @@
             </select>
             </div>
             
-            <div class="frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field frm_left_half <?php echo $pos_class ?>">
                 <label class="frm_primary_label"><?php _e('Radio Buttons', 'formidable') ?></label>
                 <div class="frm_radio"><input type="radio" /><label><?php _e('Option 1', 'formidable') ?></label></div>
                 <div class="frm_radio"><input type="radio" /><label><?php _e('Option 2', 'formidable') ?></label></div>
             </div>
             
-            <div class="frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field frm_right_half <?php echo $pos_class ?>">
                 <label class="frm_primary_label"><?php _e('Check Boxes', 'formidable') ?></label>
                 <div class="frm_checkbox"><input type="checkbox" /><label><?php _e('Option 1', 'formidable') ?></label></div>
                 <div class="frm_checkbox"><input type="checkbox" /><label><?php _e('Option 2', 'formidable') ?></label></div>
             </div>
             
-            <div class="form-field frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field form-field <?php echo $pos_class ?>">
                 <label class="frm_primary_label"><?php _e('Text Area', 'formidable') ?></label>   
                 <textarea></textarea>
                 <div class="frm_description"><?php _e('Another field with a description', 'formidable') ?></div>
             </div>
             
-            <div class="form-field frm_pos_container <?php echo $pos_class ?>">
+            <div class="frm_form_field form-field <?php echo $pos_class ?>">
                 <label class="frm_primary_label"><?php _e('Rich Text Area', 'formidable') ?></label>   
                 <textarea name="rte" id="rte"></textarea>
                 <?php $wp_scripts->do_items( 'nicedit' ); ?>
@@ -162,6 +162,7 @@
             <div id="datepicker_sample" style="margin-bottom:<?php echo $frmpro_settings->field_margin ?>;"></div>
             
             </fieldset>
+            </div>
             
             <p class="submit">
             <input type="submit" disabled="disabled" value="Submit" />

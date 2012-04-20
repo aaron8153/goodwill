@@ -3,15 +3,15 @@
 header('Content-Description: File Transfer');
 header("Content-Disposition: attachment; filename=\"$filename\"");
 header('Content-Type: text/csv; charset=' . $charset, true);
-header("Expires: ".gmdate("D, d M Y H:i:s", mktime(date("H")+2, date("i"), date("s"), date("m"), date("d"), date("Y")))." GMT");
-header("Last-Modified: ".gmdate("D, d M Y H:i:s")." GMT");
-header("Cache-Control: no-cache, must-revalidate");
-header("Pragma: no-cache");
+header('Expires: '. gmdate("D, d M Y H:i:s", mktime(date('H')+2, date('i'), date('s'), date('m'), date('d'), date('Y'))) .' GMT');
+header('Last-Modified: '. gmdate('D, d M Y H:i:s') .' GMT');
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
    
 foreach ($form_cols as $col)
     echo '"'. FrmProEntriesHelper::encode_value(strip_tags($col->name), $charset, $to_encoding) .'",';
         
-echo '"Timestamp","IP"'."\n";
+echo '"'. __('Timestamp', 'formidable') .'","IP","ID","Key"'."\n";
     
 foreach($entries as $entry){
     foreach ($form_cols as $col){
@@ -62,7 +62,9 @@ foreach($entries as $entry){
     }
     $formatted_date = date($wp_date_format, strtotime($entry->created_at));
     echo "\"{$formatted_date}\",";
-    echo "\"{$entry->ip}\"\n";
+    echo "\"{$entry->ip}\",";
+    echo "\"{$entry->id}\",";
+    echo "\"{$entry->item_key}\"\n";
     unset($entry);
     
 }

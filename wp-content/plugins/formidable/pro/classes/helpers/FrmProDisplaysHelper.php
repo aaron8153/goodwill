@@ -24,7 +24,7 @@ class FrmProDisplaysHelper{
         $options = maybe_unserialize($record->options);
         foreach (FrmProDisplaysHelper::get_default_opts() as $var => $default){
             if(!isset($values[$var]))
-                $values[$var] = stripslashes_deep(FrmAppHelper::get_param('options['.$var.']', (isset($options[$var])) ? $options[$var] : $default));
+                $values[$var] = stripslashes_deep(FrmAppHelper::get_post_param('options['.$var.']', (isset($options[$var])) ? $options[$var] : $default));
         }
         
         return $values;

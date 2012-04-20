@@ -9,7 +9,7 @@ class FrmProDb{
     
     function upgrade(){
       global $wpdb;
-      $db_version = 12; // this is the version of the database we're moving to
+      $db_version = 14; // this is the version of the database we're moving to
       $old_db_version = get_option('frmpro_db_version');
 
       if ($db_version != $old_db_version){

@@ -10,17 +10,22 @@ class FrmProEntriesHelper{
         global $user_ID;
         if (!$form or !$form->editable or !$user_ID)
             return $action;
-        
+
         $form_options = maybe_unserialize($form->options);
         if (isset($form_options['single_entry']) and $form_options['single_entry'] and $action != 'destroy'){
-            global $frmdb;
-            $meta = $frmdb->get_var($frmdb->entries, array('user_id' => $user_ID, 'form_id' => $form->id));
-            if($meta)
-                $action = 'edit';
+            if($action == 'update' and ($form->id == FrmAppHelper::get_param('form_id'))){
+                //don't change the action is this is the wrong form
+            }else{
+                global $frmdb;
+                $meta = $frmdb->get_var($frmdb->entries, array('user_id' => $user_ID, 'form_id' => $form->id));
+                if($meta)
+                    $action = 'edit';
+            }
         }
        
         if ($action == 'edit' and isset($form_options['editable_role']) and !FrmAppHelper::user_has_permission($form_options['editable_role']))
             $action = 'new';
+
         return $action;
     }
     
@@ -65,7 +70,7 @@ class FrmProEntriesHelper{
 //<![CDATA[
 function frm_resend_email(entry_id,form_id,type){
 jQuery('#frm_resend_'+type).replaceWith('<img id="frm_resend_'+type+'" src="<?php echo FRM_IMAGES_URL; ?>/wpspin_light.gif" alt="<?php _e('Loading...', 'formidable'); ?>" />');
-jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL ?>",data:"controller=entries&action=send_email&entry_id="+entry_id+"&form_id="+form_id+"&type="+type,
+jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL ?>",data:"controller=entries&frm_action=send_email&entry_id="+entry_id+"&form_id="+form_id+"&type="+type,
 success:function(msg){ jQuery('#frm_resend_'+type).replaceWith('<?php _e('Email Resent to', 'formidable') ?> '+msg);}
 });
 }
@@ -75,16 +80,24 @@ success:function(msg){ jQuery('#frm_resend_'+type).replaceWith('<?php _e('Email 
     }
     
     function before_table($footer, $form_id=false){
-        if (!$footer and $_GET['page'] == 'formidable-entries'){ ?>
+        if($footer)
+            return;
+            
+        if ($_GET['page'] == 'formidable-entries'){ ?>
             <div class="alignleft actions">
             <?php FrmFormsHelper::forms_dropdown('frm_redirect_to_list', '', __('Switch Form', 'formidable'), false,  "frmRedirectToForm(this.value,'list')"); ?>
             </div>
             <?php            
             if ($form_id){ 
                 if(current_user_can('frm_create_entries')){ ?>
-                <div class="alignleft"><a href="?page=formidable-entries&amp;action=new&amp;form=<?php echo $form_id ?>" class="button-secondary"><?php _e('Add New Entry to this form', 'formidable') ?></a></div>
+                <div class="alignleft"><a href="?page=formidable-entries&amp;frm_action=new&amp;form=<?php echo $form_id ?>" class="button-secondary"><?php _e('Add New Entry to this form', 'formidable') ?></a></div>
             <?php } 
             }
+        }else if($_GET['page'] == 'formidable-entry-templates' and $form_id){ ?>
+            <div class="alignleft actions">
+            <?php FrmFormsHelper::forms_dropdown('frm_redirect_to_list', '', __('Switch Form', 'formidable'), false,  "frmRedirectToDisplay(this.value,'list')"); ?>
+            </div>
+        <?php    
         }
     }
     
@@ -101,7 +114,7 @@ success:function(msg){ jQuery('#frm_resend_'+type).replaceWith('<?php _e('Email 
         $p_search = $search = '';
         $search_or = '';
         
-        $data_field = FrmProForm::has_field('data', $form_id);
+        $data_field = FrmProForm::has_field('data', $form_id, false);
         
 		foreach( (array) $search_terms as $term ) {
 			$term = esc_sql( like_escape( $term ) );
@@ -111,15 +124,28 @@ success:function(msg){ jQuery('#frm_resend_'+type).replaceWith('<?php _e('Email 
             $search_or = ' OR ';
             
             if($data_field){
+                $df_form_ids = array();
+                
                 //search the joined entry too
-                $data_field->field_options = maybe_unserialize($data_field->field_options);
-                if (is_numeric($data_field->field_options['form_select'])){
-                    global $wpdb, $frmdb;
-                    $data_form_id = $wpdb->get_var("SELECT form_id FROM $frmdb->fields WHERE id=".$data_field->field_options['form_select']);
-                    $data_entry_ids = $frm_entry_meta->getEntryIds("fi.form_id=$data_form_id and meta_value LIKE '%". $term ."%'");
+                foreach((array)$data_field as $df){
+                    $df->field_options = maybe_unserialize($df->field_options);
+                    if (is_numeric($df->field_options['form_select']))
+                        $df_form_ids[] = $df->field_options['form_select'];
+                    
+                    unset($df);
+                }
+                
+                global $wpdb, $frmdb;
+                $data_form_ids = $wpdb->get_col("SELECT form_id FROM $frmdb->fields WHERE id in (". implode(',', $df_form_ids).")");
+                unset($df_form_ids);
+                
+                if($data_form_ids){
+                    $data_entry_ids = $frm_entry_meta->getEntryIds("fi.form_id in (". implode(',', $data_form_ids).") and meta_value LIKE '%". $term ."%'");
                     if($data_entry_ids)
                         $search .= "{$search_or}meta_value in (".implode(',', $data_entry_ids).")";
                 }
+                
+                unset($data_form_ids);
             }
 		}
 		

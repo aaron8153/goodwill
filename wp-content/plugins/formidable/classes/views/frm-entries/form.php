@@ -12,7 +12,7 @@ echo FrmFormsHelper::replace_shortcodes($values['before_html'], $form, $title, $
 <div class="frm_form_fields">
 <fieldset>
 <div>
-<input type="hidden" name="action" value="<?php echo esc_attr($form_action) ?>" />
+<input type="hidden" name="frm_action" value="<?php echo esc_attr($form_action) ?>" />
 <input type="hidden" name="form_id" value="<?php echo esc_attr($form->id) ?>" />
 <input type="hidden" name="form_key" value="<?php echo esc_attr($form->form_key) ?>" />
 <?php if (isset($id)){ ?><input type="hidden" name="id" value="<?php echo esc_attr($id) ?>" /><?php } ?>
@@ -34,7 +34,7 @@ foreach($values['fields'] as $field){
 }
 
 if (is_admin() && !$frm_settings->lock_keys){ ?>
-<div class="form-field">
+<div class="frm_form_field form-field">
 <label class="frm_primary_label"><?php _e('Entry Key', 'formidable') ?></label>   
 <input type="text" name="item_key" value="<?php echo esc_attr($values['item_key']) ?>" />
 </div>

@@ -1,19 +1,34 @@
 <div class="wrap">
     <div id="icon-edit-pages" class="icon32"><br/></div>
     <h2><?php echo ($form) ? (FrmAppHelper::truncate(stripslashes($form->name), 25) .' ') : ''; _e('Entries', 'formidable'); ?>
-        <a href="?page=formidable-entries&amp;action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
-        <a href="?page=formidable-entries&amp;action=import<?php echo ($form) ? '&amp;form_id='.$form->id : ''; ?>" class="button add-new-h2"><?php _e('Import', 'formidable'); ?></a>
+        <a href="?page=formidable-entries&amp;frm_action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
+        <a href="?page=formidable-entries&amp;frm_action=import<?php echo ($form) ? '&amp;form_id='.$form->id : ''; ?>" class="button add-new-h2"><?php _e('Import', 'formidable'); ?></a>
     </h2>
 
 <?php 
 require(FRM_VIEWS_PATH.'/shared/errors.php');
-do_action('frm_before_item_nav',$sort_str, $sdir_str, $search_str, $fid);
+
+if(class_exists('WP_List_Table')){ ?>
+
+<form id="posts-filter" method="get">
+    <input type="hidden" name="page" value="formidable-entries" />
+    <input type="hidden" name="form" value="<?php echo ($form) ? $form->id : ''; ?>" />
+    <input type="hidden" name="frm_action" value="list" />
+<?php $wp_list_table->search_box( __( 'Search', 'formidable' ), 'entry' ); 
+
 require(FRM_VIEWS_PATH.'/shared/nav.php');
-if($form) FrmAppController::get_form_nav($form->id, true); 
-?>
-  
+if($form) FrmAppController::get_form_nav($form->id, true);
+
+$wp_list_table->display(); ?>
+
+</form>
+<?php }else{  
+do_action('frm_before_item_nav', $sort_str, $sdir_str, $search_str, $fid);
+require(FRM_VIEWS_PATH.'/shared/nav.php');
+if($form) FrmAppController::get_form_nav($form->id, true);
+?>  
 <form class="form-fields item-list-form" name="item_list_form" id="posts-filter" method="post" >
-<input type="hidden" name="action" value="list-form"/>
+<input type="hidden" name="frm_action" value="list-form"/>
 <?php $footer = false; $select_forms = true; require(FRM_VIEWS_PATH.'/shared/item-table-nav.php'); ?>
 
 <table class="wp-list-table widefat post fixed" cellspacing="0">
@@ -21,12 +36,10 @@ if($form) FrmAppController::get_form_nav($form->id, true);
     <tr>
         <th class="manage-column check-column" scope="col"> <?php do_action('frm_column_header'); ?> </th>
         <?php foreach ($form_cols as $col){ ?>
-        <th class="manage-column column-frm_<?php echo $col->field_key ?>" id="frm_<?php echo $col->field_key ?>" <?php //echo (array_key_exists('frm_'. $col->field_key, $frm_hidden_cols)) ? 'style="display:none"' : ''; ?> scope="col">
-            <!--<a href="?page=formidable-entries&form=<?php echo $params['form'] ?>&sort=<?php echo $col->id ?><?php echo (($sort_str == $col->id and $sdir_str == 'asc')?'&sdir=desc':''); ?>"></a>-->
+        <th class="manage-column column-frm_<?php echo $col->field_key ?>" id="frm_<?php echo $col->field_key ?>" scope="col">
             <?php echo FrmAppHelper::truncate($col->name, 40) ?>
         </th>
         <?php } ?>
-      <!--<th class="manage-column"><a href="?page=formidable-entries&sort=item_key<?php echo (($sort_str == 'item_key' and $sdir_str == 'asc')?'&sdir=desc':''); ?>">Key</a></th>-->
     </tr>
     </thead>
 <tbody>
@@ -50,11 +63,11 @@ if($form) FrmAppController::get_form_nav($form->id, true);
             <?php do_action('frm_first_col', $item->id); ?>
         </th>
     <?php foreach ($form_cols as $col){ ?>
-        <td class="column-frm_<?php echo $col->field_key ?><?php if ($col == $form_cols[0]){ ?> post-title<?php } ?>" <?php //echo (array_key_exists('frm_'. $col->field_key, $frm_hidden_cols)) ? 'style="display:none"' : ''; ?>>
+        <td class="column-frm_<?php echo $col->field_key ?><?php if ($col == $form_cols[0]){ ?> post-title<?php } ?>">
             <?php if ($col == $form_cols[0]){
                 $entry_action = (current_user_can('frm_edit_entries')) ? 'edit' : 'show'; 
             ?>
-            <a class="row-title" href="?page=formidable-entries&amp;action=<?php echo $entry_action ?>&amp;id=<?php echo $item->id; ?>" title="<?php echo esc_attr($entry_action .' '. stripslashes($item->name)); ?>">
+            <a class="row-title" href="?page=formidable-entries&amp;frm_action=<?php echo $entry_action ?>&amp;id=<?php echo $item->id; ?>" title="<?php echo esc_attr($entry_action .' '. stripslashes($item->name)); ?>">
             <?php }
             $field_value = isset($item->metas[$col->id]) ? $item->metas[$col->id] : false;
             $col->field_options = maybe_unserialize($col->field_options);
@@ -73,25 +86,24 @@ if($form) FrmAppController::get_form_nav($form->id, true);
             if ($col == $form_cols[0]){ ?>
             </a><br/>
             <div class="row-actions">  
-              <span><a href="?page=formidable-entries&amp;action=show&amp;id=<?php echo $item->id; ?>" title="<?php _e('View', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('View', 'formidable') ?></a></span>
+              <span><a href="?page=formidable-entries&amp;frm_action=show&amp;id=<?php echo $item->id; ?>" title="<?php _e('View', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('View', 'formidable') ?></a></span>
                 
               <?php if(current_user_can('frm_edit_entries')){ ?>
-              | <span class="edit"><a href="?page=formidable-entries&amp;action=edit&amp;id=<?php echo $item->id; ?>" title="<?php _e('Edit', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Edit', 'formidable') ?></a></span>
+              | <span class="edit"><a href="?page=formidable-entries&amp;frm_action=edit&amp;id=<?php echo $item->id; ?>" title="<?php _e('Edit', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Edit', 'formidable') ?></a></span>
               <?php }
 
               if(current_user_can('frm_create_entries')){ ?>
-              | <span><a href="?page=formidable-entries&amp;action=duplicate&amp;form=<?php echo $params['form'] ?>&amp;id=<?php echo $item->id; ?>" title="<?php _e('Duplicate', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Duplicate', 'formidable') ?></a></span>
+              | <span><a href="?page=formidable-entries&amp;frm_action=duplicate&amp;form=<?php echo $params['form'] ?>&amp;id=<?php echo $item->id; ?>" title="<?php _e('Duplicate', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Duplicate', 'formidable') ?></a></span>
               <?php 
               }
               
               if(current_user_can('frm_delete_entries')){ ?>
-              | <span class="trash"><a href="?page=formidable-entries&amp;action=destroy&amp;id=<?php echo $item->id; ?><?php echo ($params['form']) ? '&form='.$params['form'] : '' ?>"  onclick="return confirm('<?php _e('Are you sure you want to delete that entry?', 'formidable') ?>');" title="<?php _e('Delete', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Delete', 'formidable') ?></a></span>
+              | <span class="trash"><a href="?page=formidable-entries&amp;frm_action=destroy&amp;id=<?php echo $item->id; ?><?php echo ($params['form']) ? '&form='.$params['form'] : '' ?>"  onclick="return confirm('<?php _e('Are you sure you want to delete that entry?', 'formidable') ?>');" title="<?php _e('Delete', 'formidable') ?> <?php echo $item->item_key; ?>"><?php _e('Delete', 'formidable') ?></a></span>
               <?php } ?>
             </div>
             <?php } ?>
         </td>
     <?php } ?>
-    <!--<td><?php echo $item->item_key ?></td>-->
     </tr>
 <?php
     }
@@ -102,17 +114,20 @@ if($form) FrmAppController::get_form_nav($form->id, true);
 <tr>
     <th class="manage-column check-column" scope="col"> <?php do_action('frm_column_header'); ?> </th>
     <?php foreach ($form_cols as $col){ ?>
-    <th class="manage-column" <?php //echo (array_key_exists('frm_'. $col->field_key, $frm_hidden_cols)) ? 'style="display:none"' : ''; ?>><?php echo FrmAppHelper::truncate($col->name, 40) ?></th>
+    <th class="manage-column"><?php echo FrmAppHelper::truncate($col->name, 40) ?></th>
     <?php } ?>
-    <!--<th class="manage-column">Key</th>-->
 </tr>
 </tfoot>
 </table>
-<?php $footer = true; $select_forms = false; require(FRM_VIEWS_PATH.'/shared/item-table-nav.php'); ?>
-<?php if($form){ ?>
-<p class="alignright frm_uninstall"><a href="?page=formidable-entries&amp;action=destroy_all<?php echo ($form) ? '&amp;form='. $form->id : '' ?>" class="button-secondary" onclick="return confirm('<?php _e('Are you sure you want to permanently delete ALL the entries in this form?', 'formidable') ?>')"><?php _e('Delete ALL Entries', 'formidable') ?></a></p>
+<?php 
+$footer = true; $select_forms = false; 
+require(FRM_VIEWS_PATH.'/shared/item-table-nav.php'); 
+}
 
-<p><a href="<?php echo FRM_SCRIPT_URL ?>&amp;controller=entries<?php echo $page_params; ?>&amp;action=csv" class="button-secondary"><?php _e('Download CSV for', 'formidable'); echo ' '. stripslashes($form->name); ?></a></p><br/><br/>
+if($form){ ?>
+<p class="alignright frm_uninstall"><a href="?page=formidable-entries&amp;frm_action=destroy_all<?php echo ($form) ? '&amp;form='. $form->id : '' ?>" class="button-secondary" onclick="return confirm('<?php _e('Are you sure you want to permanently delete ALL the entries in this form?', 'formidable') ?>')"><?php _e('Delete ALL Entries', 'formidable') ?></a></p>
+
+<p><a href="<?php echo esc_url(FRM_SCRIPT_URL . "&controller=entries{$page_params}&frm_action=csv") ?>" class="button-secondary"><?php _e('Download CSV for', 'formidable'); echo ' '. stripslashes($form->name); ?></a></p><br/><br/>
 <?php } ?>
 </form>
 

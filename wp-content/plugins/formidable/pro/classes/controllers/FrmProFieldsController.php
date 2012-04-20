@@ -9,10 +9,12 @@ class FrmProFieldsController{
         add_filter('frm_field_value_saved', array( &$this, 'use_field_key_value'), 10, 3);
         add_action('frm_get_field_scripts', array(&$this, 'show_field'));
         add_action('frm_display_added_fields', array(&$this, 'show'));
+        add_filter('frm_html_label_position', array(&$this, 'label_position'));
         add_filter('frm_display_field_options', array(&$this, 'display_field_options'));
         add_action('frm_form_fields', array(&$this, 'form_fields'), 10, 2);
         add_action('frm_field_input_html', array(&$this, 'input_html'));
         add_filter('frm_field_classes', array(&$this, 'add_field_class'), 20, 2);
+        add_action('frm_add_multiple_opts_labels', array($this, 'add_separate_value_opt_label')); 
         add_action('frm_field_options_form', array(&$this, 'options_form'), 10, 3);
         add_action('wp_ajax_frm_get_field_selection', array(&$this, 'get_field_selection'));
         add_action('wp_ajax_frm_get_field_values', array(&$this, 'get_field_values'));
@@ -82,6 +84,11 @@ class FrmProFieldsController{
         global $frm_ajax_url;
         $field_name = "item_meta[". $field['id'] ."]";
         require(FRMPRO_VIEWS_PATH.'/frmpro-fields/show.php');    
+    }
+    
+    function label_position($position){
+        global $frmpro_settings;
+        return ($position and $position != '') ? $position : ($frmpro_settings->position == 'none' ? 'top' : $frmpro_settings->position);
     }
     
     function display_field_options($display){
@@ -191,8 +198,18 @@ class FrmProFieldsController{
     function add_field_class($class, $field){
         if($field['type'] == 'scale' and isset($field['star']) and $field['star'])
             $class .= ' star';
+        else if($field['type'] == 'date')
+            $class .= ' frm_date';
             
         return $class;
+    }
+    
+    function add_separate_value_opt_label($field){
+        $style = $field['separate_value'] ? '' : "style='display:none;'";
+        echo '<div class="frm-show-click">';
+        echo '<div class="field_'. $field['id'] .'_option_key frm_option_val_label" '. $style .'>'. __('Option Label', 'formidable') .'</div>';
+        echo '<div class="field_'. $field['id'] .'_option_key frm_option_key_label" '. $style .'>'. __('Saved Value', 'formidable') .'</div>';
+        echo '</div>';
     }
     
     function options_form($field, $display, $values){
@@ -323,7 +340,22 @@ class FrmProFieldsController{
     
     function date_field_js($field_id, $options){
         if($options['unique']){
-            global $frmdb, $wpdb;
+            global $frmdb, $wpdb, $frm_field;
+            
+            $field = $frm_field->getOne($options['field_id']);
+            $field->field_options = maybe_unserialize($field->field_options);
+
+            if(isset($field->field_options['post_field']) and $field->field_options['post_field'] != ''){
+                if($field->field_options['post_field'] == 'post_custom'){
+                    $query = "SELECT meta_value FROM $wpdb->postmeta pm LEFT JOIN $wpdb->posts p ON (p.ID=pm.post_id) WHERE meta_value != '' AND meta_key='". $field->field_options['custom_field'] ."'";
+                }else{
+                    $query = "SELECT $post_field FROM $wpdb->posts WHERE 1=1";
+                }
+                $query .= " and post_status in ('publish','draft','pending','future','private')";
+
+                $post_dates = $wpdb->get_col($query);
+            }
+            
             $query = "SELECT meta_value FROM $frmdb->entry_metas WHERE field_id=". (int)$options['field_id'];
             if(is_numeric($options['entry_id'])){
                 $query .= " and item_id != ". (int)$options['entry_id'];
@@ -334,6 +366,9 @@ class FrmProFieldsController{
             if(!isset($disabled) or !$disabled)
                 $disabled = $wpdb->get_col($query);
             
+            if(isset($post_dates) and $post_dates)
+                $disabled = array_merge((array)$post_dates, (array)$disabled);
+
             if(!$disabled)
                 return;
                 
@@ -355,18 +390,15 @@ class FrmProFieldsController{
     function ajax_get_data($entry_id, $field_id, $current_field){
         global $frm_entry_meta, $frm_field;
         $data_field = $frm_field->getOne($field_id);
-        $meta_value = $frm_entry_meta->get_entry_meta_by_field($entry_id, $field_id);
         $current = $frm_field->getOne($current_field);
+        $meta_value = FrmProEntryMetaHelper::get_post_or_meta_value($entry_id, $data_field);
         
-        if (isset($data_field->type) && $data_field->type == 'file')
-            $value = FrmProFieldsHelper::get_file_icon($meta_value);
-        else
-            $value = stripslashes($meta_value);
+        $value = FrmProFieldsHelper::get_display_value($meta_value, $data_field);
         
         if($value and !empty($value))
-            echo "<p>". $value ."</p>\n";
+            echo "<p class='frm_show_it'>". $value ."</p>\n";
             
-        echo '<input type="hidden" id="field_'. $current->field_key .'" name="item_meta['. $current_field .']" value="'. stripslashes(esc_html($meta_value)) .'"/>';
+        echo '<input type="hidden" id="field_'. $current->field_key .'" name="item_meta['. $current_field .']" value="'. stripslashes(esc_attr($meta_value)) .'"/>';
         die();
     }
     
@@ -483,7 +515,7 @@ class FrmProFieldsController{
 	        $date = FrmProAppHelper::convert_date($date, $frmpro_settings->date_format, 'Y-m-d');
 	    $date_entries = FrmEntryMeta::getEntryIds("fi.field_key='$date_key' and meta_value='$date'");
 
-	    $opts = array();
+	    $opts = array('' => '');
         $time = strtotime($start);
         $end = strtotime($end);
         $step = explode(':', $step);
@@ -499,8 +531,20 @@ class FrmProFieldsController{
 	        $used_times = $wpdb->get_col("SELECT meta_value FROM $frmdb->entry_metas it LEFT JOIN $frmdb->fields fi ON (it.field_id = fi.id) WHERE fi.field_key='$time_key' and it.item_id in (". implode(',', $date_entries).")");
 	        
 	        if($used_times and !empty($used_times)){
-	            foreach($used_times as $used)
-	                unset($opts[$used]);
+	            $number_allowed = apply_filters('frm_allowed_time_count', 1, $time_key, $date_key);
+	            $count = array();
+	            foreach($used_times as $used){
+	                if(!isset($opts[$used]))
+	                    continue;
+	                    
+	                if(!isset($count[$used]))
+	                    $count[$used] = 0;
+	                $count[$used]++;
+	                
+	                if((int)$count[$used] >= $number_allowed)
+	                    unset($opts[$used]);
+	            }
+	            unset($count);
 	        }
 	    }
 	    

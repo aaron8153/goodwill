@@ -1,8 +1,14 @@
-<?php if (in_array($field['type'], array('website', 'phone', 'tag', 'time', 'date', 'email', 'url', 'number', 'password'))){ ?>
+<?php if (in_array($field['type'], array('website', 'phone', 'tag', 'date', 'email', 'url', 'number', 'password'))){ ?>
     <input type="text" id="field_<?php echo $field['field_key'] ?>" name="<?php echo $field_name ?>" value="<?php echo esc_attr($field['default_value']); ?>" <?php do_action('frm_field_input_html', $field) ?>/>
 <?php }else if ($field['type'] == 'hidden'){ ?>
     <input type="text" name="<?php echo $field_name ?>" value="<?php echo esc_attr($field['default_value']); ?>"/> 
     <p class="howto clear"><?php _e('Note: This field will not show in the form. Enter the value to be hidden.', 'formidable') ?></p>
+<?php }else if($field['type'] == 'time'){ ?>
+<select name="<?php echo $field_name ?>" id="field_<?php echo $field['field_key'] ?>" <?php do_action('frm_field_input_html', $field) ?>>
+    <option value=""><?php echo $field['start_time'] ?></option>
+    <option value="">...</option>
+    <option value=""><?php echo $field['end_time'] ?></option>
+</select>
 <?php }else if ($field['type'] == 'user_id'){ ?>
     <p class="howto clear"><?php _e('Note: This field will not show in the form, but will link the user id to it as long as the user is logged in at the time of form submission.', 'formidable') ?></p>
 <?php }else if ($field['type'] == 'image'){ ?>
@@ -19,7 +25,7 @@
         -->
     <div class="frm_rte">
         <p class="howto"><?php _e('These buttons are for illustrative purposes only. They will be functional in your form.', 'formidable')?></p>
-        <textarea name="<?php echo $field_name ?>" rows="<?php echo $field['max']; ?>"><?php echo $field['default_value']; ?></textarea> 
+        <textarea name="<?php echo $field_name ?>" rows="<?php echo $field['max']; ?>"><?php echo FrmAppHelper::esc_textarea($field['default_value']); ?></textarea> 
     </div>
 <?php }else if ($field['type'] == 'html'){ 
 global $frmpro_settings; ?>

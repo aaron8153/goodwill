@@ -1,5 +1,5 @@
 <?php
-if (in_array($field['type'], array('phone', 'tag', 'date', 'time'))){ ?>
+if (in_array($field['type'], array('phone', 'tag', 'date'))){ ?>
 <input type="text" id="field_<?php echo $field['field_key'] ?>" name="<?php echo $field_name ?>" value="<?php echo esc_attr($field['value']) ?>" <?php do_action('frm_field_input_html', $field) ?>/>
 <?php 
 if ($field['type'] == 'date' and (!isset($field['read_only']) or !$field['read_only'])){ 
@@ -10,16 +10,21 @@ $frm_datepicker_loaded['field_'. $field['field_key']] = array(
     'locale' => $field['locale'], 'unique' => $field['unique'], 'entry_id' => $entry_id,
     'field_id' => $field['id']
 );
-
-}else if($field['type'] == 'time'){
+}
+}else if($field['type'] == 'time'){ ?>
+<select name="<?php echo $field_name ?>" id="field_<?php echo $field['field_key'] ?>" <?php do_action('frm_field_input_html', $field) ?>>
+    <option value=""></option>
+    <?php if(!empty($field['value'])){ ?>
+    <option value="<?php echo esc_attr($field['value']) ?>" selected="selected"><?php echo esc_attr($field['value']) ?></option>
+    <?php } ?>
+</select>
+<?php    
 global $frm_timepicker_loaded;
 $frm_timepicker_loaded['field_'. $field['field_key']] = array(
     'clock' => ((isset($field['clock']) and $field['clock'] == 24) ? true : false),  //show24hours
     'step' => $field['step'], 'start_time' => $field['start_time'], 'end_time' => $field['end_time'],
     'unique' => $field['unique'], 'entry_id' => $entry_id
 );
-}
-
 }else if(in_array($field['type'], array('email', 'url', 'number', 'password'))){ ?>
 <input type="<?php echo ($frm_settings->use_html or $field['type'] == 'password') ? $field['type'] : 'text'; ?>" id="field_<?php echo $field['field_key'] ?>" name="<?php echo $field_name ?>" value="<?php echo esc_attr($field['value']) ?>" <?php do_action('frm_field_input_html', $field) ?>/>
 <?php
@@ -54,7 +59,7 @@ else
 <style type="text/css">#wp-field_<?php echo $field['field_key'] ?>-wrap{width:<?php echo (int)((int)$field['size'] * 8.6) ?>px;}</style><?php
         }
         
-        wp_editor($field['value'], 'field_'. $field['field_key'] . ($frm_ajax_edit ? $frm_ajax_edit : '' ),  $e_args);
+        wp_editor(str_replace('&quot;', '"', $field['value']), 'field_'. $field['field_key'] . ($frm_ajax_edit ? $frm_ajax_edit : '' ),  $e_args);
         unset($e_args);
     }else{ ?>
 <textarea name="<?php echo $field_name ?>" id="field_<?php echo $field['field_key'] ?>" <?php if ($field['size']){ ?>cols="<?php echo $field['size'] ?>"<?php } ?> style="height:<?php echo ($field['max']) ? ((int)$field['max'] * 17) : 125 ?>px;<?php if (!$field['size']){ ?>width:<?php echo $frmpro_settings->field_width; } ?>" <?php do_action('frm_field_input_html', $field) ?>><?php echo FrmAppHelper::esc_textarea($field['value']) ?></textarea>

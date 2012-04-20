@@ -7,7 +7,23 @@
         </select>
     </td>
 </tr>
-<?php }else if ($display['type'] == 'divider'){ ?>
+<?php } 
+
+if(in_array($display['type'], array('radio', 'checkbox', 'select'))){ ?>
+<tr><td><?php _e('Use separate values', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('Add a separate value to use for calculations, email routing, saving to the database, and many other uses. The option values are saved while the option labels are shown in the form.', 'formidable') ?>" /></td>
+    <td><input type="checkbox" name="field_options[separate_value_<?php echo $field['id'] ?>]" id="separate_value_<?php echo $field['id'] ?>" value="1" <?php checked($field['separate_value'], 1) ?> onclick="frmSeparateValue(<?php echo $field['id'] ?>)" /> <label for="separate_value_<?php echo $field['id'] ?>"><?php _e('Use separate values', 'formidable'); ?></label></td>
+</tr>
+<?php 
+}
+
+if(in_array($field['type'], array('radio', 'checkbox', 'select', 'scale', 'user_id')) or ($field['type'] == 'data' and $field['data_type'] != 'data')){ ?>
+<tr><td><?php _e('Default Dynamic Value', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('If your radio, checkbox, dropdown, or user ID field needs a dynamic default value like [get param=whatever], insert it in the field options. If using a GET or POST value, it must match one of the options in the field in order for that option to be selected. Data from entries fields require the ID of the linked entry.', 'formidable') ?>" /></td>
+    <td><input type="text" name="field_options[dyn_default_value_<?php echo $field['id'] ?>]" value="<?php echo esc_attr($field['dyn_default_value']) ?>" /></td>
+</tr>
+<?php 
+}
+
+if ($display['type'] == 'divider'){ ?>
 <tr><td colspan="2"><input type="checkbox" name="field_options[slide_<?php echo $field['id'] ?>]" value='1'<?php echo ($field['slide'])?' checked="checked"':''; ?> /> <?php _e('Make this section collapsable', 'formidable') ?></td>
 </tr>
 <?php }else if ($field['type'] == 'data'){
@@ -154,7 +170,7 @@
 </tr>
 <?php }else if($field['type'] == 'html'){ ?>
 <tr><td colspan="2"><?php _e('Content', 'formidable') ?><br/>
-<textarea name="field_options[description_<?php echo $field['id'] ?>]" style="width:98%;" rows="8"><?php echo $field['description'] ?></textarea>
+<textarea name="field_options[description_<?php echo $field['id'] ?>]" style="width:98%;" rows="8"><?php echo FrmAppHelper::esc_textarea($field['description']) ?></textarea>
 </td>
 </tr>
 <?php }else if($field['type'] == 'form'){ ?>
@@ -242,7 +258,7 @@ if ($form_fields and !in_array($field['type'], array('hidden', 'user_id'))){ ?>
 </tr>
 <?php }
 
-if (!$frm_settings->lock_keys and $field['type'] != 'divider'){ ?>
+if (!$frm_settings->lock_keys){ ?>
 <tr><td width="150px"><?php _e('Field Key', 'formidable') ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('The field key can be used as an alternative to the field ID in many cases.', 'formidable') ?>" /></td>
     <td><input type="text" name="field_options[field_key_<?php echo $field['id'] ?>]" value="<?php echo esc_attr($field['field_key']); ?>" size="20" /></td>
 </tr>

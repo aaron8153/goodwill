@@ -20,6 +20,9 @@
                     <!-- <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('If you would like the content to be inserted automatically, you must then select the page in which to insert it.', 'formidable') ?>" /><br/> -->
                 <?php FrmAppHelper::wp_pages_dropdown( 'post_id', $values['post_id'], 35 ); ?>
             </span>
+            <?php if($values['insert_loc'] != 'none' and is_numeric($values['post_id'])){ ?>
+            <a href="<?php echo get_permalink($values['post_id']) ?>" target="_blank" class="button-secondary"><?php _e('View Post', 'formidable') ?></a>
+            <?php } ?>
         </p>
         
         <p class="howto"><?php _e('Insert position', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('If the custom display doesn\'t show automatically when it should, insert a higher number here.', 'formidable') ?>" />
@@ -40,7 +43,7 @@
     	<div id="major-publishing-actions">
     	    <div id="delete-action">
     	    <?php if(isset($id)){ ?>
-    	    <a class="submitdelete deletion" href="?page=formidable-entry-templates&amp;action=destroy&amp;id=<?php echo $id; ?>" onclick="return confirm('<?php printf(__('Are you sure you want to delete your %1$s display?', 'formidable'), htmlentities(stripslashes($values['name']))) ?>);" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
+    	    <a class="submitdelete deletion" href="?page=formidable-entry-templates&amp;frm_action=destroy&amp;id=<?php echo $id; ?>" onclick="return confirm('<?php printf(__('Are you sure you want to delete your %1$s display?', 'formidable'), esc_attr(stripslashes($values['name']))) ?>);" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
     	    <?php }else{ ?>
     	    <a class="submitdelete deletion" href="?page=formidable-entry-templates"><?php _e('Cancel', 'formidable') ?></a>
     	    <?php } ?>
@@ -83,7 +86,7 @@
         <th valign="top" scope="row"><?php _e('Description', 'formidable'); ?></th>
         <?php $default_value = __('This is not displayed anywhere, but is just for your reference. (optional)', 'formidable');
             $description = (!empty($values['description'])) ? $values['description'] : $default_value; ?>
-        <td><textarea id="description" name="description" style="width:98%;<?php if($description == $default_value) echo 'color:#aaa'; ?>" onfocus="frmClearDefault('<?php echo htmlentities($default_value) ?>',this)" onblur="frmReplaceDefault('<?php echo htmlentities($default_value) ?>',this)"><?php echo $description ?></textarea>
+        <td><textarea id="description" name="description" style="width:98%;<?php if($description == $default_value) echo 'color:#aaa'; ?>" onfocus="frmClearDefault('<?php echo esc_attr($default_value) ?>',this)" onblur="frmReplaceDefault('<?php echo esc_attr($default_value) ?>',this)"><?php echo FrmAppHelper::esc_textarea($description) ?></textarea>
         </td>
     </tr>
 </table>
@@ -167,7 +170,7 @@
     <tr class="form-field">
         <th valign="top" scope="row"><?php _e('Before Content', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('This content will not be repeated. This would be a good place to put any HTML table tags.', 'formidable') ?>" /><br/>(<?php _e('optional', 'formidable') ?>)</th>
         <td valign="top">
-            <textarea id="before_content" name="options[before_content]" rows="3" style="width:98%"><?php echo $values['before_content'] ?></textarea>
+            <textarea id="before_content" name="options[before_content]" rows="3" style="width:98%"><?php echo FrmAppHelper::esc_textarea($values['before_content']) ?></textarea>
         </td>
     </tr>
     
@@ -191,7 +194,7 @@
     <tr class="form-field">
         <th valign="top" scope="row"><?php _e('After Content', 'formidable'); ?> <img src="<?php echo FRM_IMAGES_URL ?>/tooltip.png" alt="?" class="frm_help" title="<?php _e('This content will not be repeated. This would be a good place to close any HTML tags from the Before Content field.', 'formidable') ?>" /><br/>(<?php _e('optional', 'formidable') ?>)</th>
         <td valign="top">
-            <textarea id="after_content" name="options[after_content]" rows="3" style="width:98%"><?php echo $values['after_content'] ?></textarea>
+            <textarea id="after_content" name="options[after_content]" rows="3" style="width:98%"><?php echo FrmAppHelper::esc_textarea($values['after_content']) ?></textarea>
         </td>
     </tr>
     
@@ -281,7 +284,7 @@
     <tr class="form-field">
         <th valign="top" scope="row"><?php _e('Message if nothing to display', 'formidable'); ?></th>
         <td>
-            <textarea id="empty_msg" name="options[empty_msg]" style="width:98%"><?php echo $values['empty_msg'] ?></textarea>
+            <textarea id="empty_msg" name="options[empty_msg]" style="width:98%"><?php echo FrmAppHelper::esc_textarea($values['empty_msg']) ?></textarea>
         </td>
     </tr>
     

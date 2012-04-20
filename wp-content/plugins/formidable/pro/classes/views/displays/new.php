@@ -8,7 +8,7 @@
     <?php include(FRM_VIEWS_PATH.'/shared/nav.php'); ?>
     
     <form method="post" >
-        <input type="hidden" name="action" value="create" />
+        <input type="hidden" name="frm_action" value="create" />
         <?php wp_nonce_field('update-options'); ?>
 
         <?php require('form.php'); ?>

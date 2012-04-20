@@ -145,8 +145,9 @@ class FrmForm{
             }else{
                 //updating the form
                 
-                foreach (array('size', 'max', 'label', 'invalid', 'required_indicator', 'blank') as $opt)
-                    $field_options[$opt] = isset($values['field_options'][$opt.'_'.$field_id]) ? trim($values['field_options'][$opt.'_'.$field_id]) : '';
+                foreach (array('size', 'max', 'label', 'invalid', 'required_indicator', 'blank', 'classes') as $opt)
+                    $field_options[$opt] = isset($values['field_options'][$opt.'_'.$field_id]) ? trim($values['field_options'][$opt.'_'.$field_id]) : ''; 
+                $field_options['separate_value'] = isset($values['field_options']['separate_value_'.$field_id]) ? trim($values['field_options']['separate_value_'.$field_id]) : 0; 
                     
                 $field_options = apply_filters('frm_update_field_options', $field_options, $field, $values);
                 $default_value = maybe_serialize($values['item_meta'][$field_id]);
@@ -261,6 +262,10 @@ class FrmForm{
 
     function getAll( $where = array(), $order_by = '', $limit = '' ){
         global $wpdb, $frmdb, $frm_app_helper;
+        
+        if(is_numeric($limit))
+            $limit = " LIMIT {$limit}";
+            
         $query = 'SELECT * FROM ' . $frmdb->forms . $frm_app_helper->prepend_and_or_where(' WHERE ', $where) . $order_by . $limit;
             
         if ($limit == ' LIMIT 1' or $limit == 1){

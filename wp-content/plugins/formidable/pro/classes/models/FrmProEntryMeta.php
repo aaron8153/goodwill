@@ -143,6 +143,13 @@ class FrmProEntryMeta{
             }
             unset($entry_id);
         }
+        
+        //make sure the [auto_id] is still unique
+        if(!empty($field->default_value) and !empty($value) and is_numeric($value) and strpos($field->default_value, '[auto_id') !== false){
+            //make sure we are not editing
+            if((isset($_POST) and !isset($_POST['id'])) or !is_numeric($_POST['id']))
+                $_POST['item_meta'][$field->id] = $value = FrmProFieldsHelper::get_default_value($field->default_value, $field);
+        }
 
         if (isset($field->field_options['admin_only']) and $field->field_options['admin_only'] and !(current_user_can('administrator') or !is_admin()))
             unset($errors['field'.$field->id]);
@@ -329,7 +336,7 @@ class FrmProEntryMeta{
     function post_value_exists($post_field, $value, $post_id, $custom_field=''){
         global $wpdb;
         if($post_field == 'post_custom'){
-            $query = "SELECT post_id FROM $wpdb->postmetas WHERE meta_value='$value' and meta_key='$custom_field'";
+            $query = "SELECT post_id FROM $wpdb->postmeta pm LEFT JOIN $wpdb->posts p ON (p.ID=pm.post_id) WHERE meta_value='$value' and meta_key='$custom_field'";
             if($post_id and is_numeric($post_id))
                 $query .= " and post_id != ". $post_id;
         }else{

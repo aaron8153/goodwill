@@ -2,18 +2,33 @@
     <div id="icon-themes" class="icon32"><br/></div>
     <h2><?php _e('Custom Displays', 'formidable'); ?>
         <?php if(current_user_can('frm_create_entries')){ ?>
-        <a href="?page=formidable-entry-templates&amp;action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
+        <a href="?page=formidable-entry-templates&amp;frm_action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
         <?php } ?>
     </h2>
   
-    <?php require(FRM_VIEWS_PATH.'/shared/errors.php'); ?>
-  
-    <?php do_action('frm_before_item_nav',$sort_str, $sdir_str, $search_str, false); ?>
-    <?php require(FRM_VIEWS_PATH.'/shared/nav.php'); ?>
-    <?php if (isset($form)) FrmAppController::get_form_nav($form); ?>
+<?php require(FRM_VIEWS_PATH.'/shared/errors.php'); 
+
+if(class_exists('WP_List_Table')){ ?>
+
+<form id="posts-filter" method="get">
+    <input type="hidden" name="page" value="formidable-entry-templates" />
+    <input type="hidden" name="frm_action" value="list" />
+<?php $wp_list_table->search_box( __( 'Search', 'formidable' ), 'entry' ); 
+
+require(FRM_VIEWS_PATH.'/shared/nav.php');
+if($form) FrmAppController::get_form_nav($form, true);
+
+$wp_list_table->display(); ?>
+
+</form>
+<?php }else{
+
+do_action('frm_before_item_nav',$sort_str, $sdir_str, $search_str, false);
+require(FRM_VIEWS_PATH.'/shared/nav.php');
+if (isset($form)) FrmAppController::get_form_nav($form, true); ?>
         
 <form name="item_list_form" id="posts-filter" method="post" >
-    <input type="hidden" name="action" value="list-form"/>  
+    <input type="hidden" name="frm_action" value="list-form"/>  
     <?php $footer = false; require(FRM_VIEWS_PATH.'/shared/item-table-nav.php'); ?>
     <table class="widefat post fixed" cellspacing="0">
         <thead>
@@ -53,7 +68,7 @@
 <?php if($record_count <= 0){ ?>
     <tr>
         <td colspan="8"><?php _e('No Custom Displays Found.', 'formidable') ?>
-            <a href="?page=formidable-entry-templates&amp;action=new"><?php _e('Add New', 'formidable'); ?></a>
+            <a href="?page=formidable-entry-templates&amp;frm_action=new"><?php _e('Add New', 'formidable'); ?></a>
         </td>
     </tr>
 <?php }else{
@@ -65,12 +80,12 @@
         <th class="check-column" scope="row"><?php do_action('frm_first_col', $display->id); ?></th>
         <td><?php echo $display->id ?></td>
         <td class="post-title">
-            <a class="row-title" href="?page=formidable-entry-templates&amp;action=edit&amp;id=<?php echo $display->id; ?>" title="Edit <?php echo stripslashes($display->name); ?>"><?php echo stripslashes($display->name); ?></a>
+            <a class="row-title" href="?page=formidable-entry-templates&amp;frm_action=edit&amp;id=<?php echo $display->id; ?>" title="Edit <?php echo stripslashes($display->name); ?>"><?php echo stripslashes($display->name); ?></a>
             <br/>
             <div class="row-actions">
-                <span class="edit"><a href="?page=formidable-entry-templates&amp;action=edit&amp;id=<?php echo $display->id; ?>" title="<?php _e('Edit', 'formidable'); ?> <?php echo $display->name; ?>"><?php _e('Edit', 'formidable') ?></a></span> |
-                <span><a href="?page=formidable-entry-templates&amp;action=duplicate&amp;id=<?php echo $display->id; ?>" title="<?php _e('Copy', 'formidable') ?> <?php echo $display->name; ?>"><?php _e('Duplicate', 'formidable') ?></a></span> |
-                <span class="trash"><a href="?page=formidable-entry-templates&amp;action=destroy&amp;id=<?php echo $display->id; ?>"  onclick="return confirm('<?php printf(__('Are you sure you want to delete your %1$s display data?', 'formidable'), $display->name) ?>');" title="<?php _e('Delete', 'formidable') ?> <?php echo $display->display_key; ?>"><?php _e('Delete', 'formidable') ?></a></span>
+                <span class="edit"><a href="?page=formidable-entry-templates&amp;frm_action=edit&amp;id=<?php echo $display->id; ?>" title="<?php _e('Edit', 'formidable'); ?> <?php echo $display->name; ?>"><?php _e('Edit', 'formidable') ?></a></span> |
+                <span><a href="?page=formidable-entry-templates&amp;frm_action=duplicate&amp;id=<?php echo $display->id; ?>" title="<?php _e('Copy', 'formidable') ?> <?php echo $display->name; ?>"><?php _e('Duplicate', 'formidable') ?></a></span> |
+                <span class="trash"><a href="?page=formidable-entry-templates&amp;frm_action=destroy&amp;id=<?php echo $display->id; ?>"  onclick="return confirm('<?php printf(__('Are you sure you want to delete your %1$s display data?', 'formidable'), $display->name) ?>');" title="<?php _e('Delete', 'formidable') ?> <?php echo $display->display_key; ?>"><?php _e('Delete', 'formidable') ?></a></span>
             </div>
         </td>
         <td><?php echo stripslashes($display->description) ?></td>
@@ -101,5 +116,5 @@
 </table>
 <?php $footer = true; require(FRM_VIEWS_PATH.'/shared/item-table-nav.php'); ?>
 </form>
-
+<?php } ?>
 </div>

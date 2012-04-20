@@ -10,7 +10,7 @@ class FrmProAppController{
         add_action('frm_column_header',array(&$this, 'insert_header_checkbox'));
         add_action('frm_first_col',array(&$this, 'insert_item_checkbox'));
         add_action('frm_before_table', array(&$this, 'add_bulk_actions'));
-        add_action('frm_before_item_nav', array(&$this, 'insert_search_form'),10,4);
+        add_action('frm_before_item_nav', array(&$this, 'insert_search_form'), 10, 4);
         add_filter('widget_text', array(&$this, 'widget_text_filter'), 8 );
         add_action('frm_standalone_route', array(&$this, 'standalone_route'), 10, 2);
         add_action('frm_after_install', array(&$this, 'install'));
@@ -36,7 +36,8 @@ class FrmProAppController{
     }
     
     function route(){
-        $action = FrmAppHelper::get_param('action');
+        $action = isset($_REQUEST['frm_action']) ? 'frm_action' : 'action';
+        $action = FrmAppHelper::get_param($action);
         if($action=='import_xml')
             return $this->import_xml();
         else
@@ -88,16 +89,22 @@ class FrmProAppController{
             }
             
             if(!$type){
-                extract($_POST);
-                $bulk = -1;
-                if(isset($bulkaction) and $bulkaction != '-1')
-                    $bulk = $bulkaction;
-                else if(isset($bulkaction) and $bulkaction2 != '-1')
-                    $bulk = $bulkaction2;
+                $bulk = FrmAppHelper::get_param('action');
+                if($bulk == -1)
+                    $bulk = FrmAppHelper::get_param('action2');
 
+                if(!empty($bulk) and strpos($bulk, 'bulk_') === 0){
+                    $bulk = str_replace('bulk_', '', $bulk);
+                }else{
+                    $bulk = '-1';
+                    if(isset($_POST['bulkaction']) and $_POST['bulkaction'] != '-1')
+                        $bulk = $_POST['bulkaction'];
+                    else if(isset($_POST['bulkaction2']) and $_POST['bulkaction2'] != '-1')
+                        $bulk = $_POST['bulkaction2'];
+                }
+                
                 if($bulk == 'export'){
-                    $ids = array_keys($_POST['item-action']);
-                    $ids = implode(',', $ids);
+                    $ids = $_REQUEST['item-action'];
 
                     if($_GET['page'] == 'formidable-entries')
                         $type = 'items';
@@ -105,15 +112,22 @@ class FrmProAppController{
                         $type = 'displays';
                     else
                         $type = 'forms';
-                }else if(isset($action) and $action == 'export_frm_xml'){
-                    $type = $frm_export_types;
+                }else{ 
+                    $action = isset($_REQUEST['frm_action']) ? 'frm_action' : 'action';
+                    $action = FrmAppHelper::get_param($action);
                     
-                    if(isset($frm_export_forms)){
-                        $ids = implode(',', $frm_export_forms);
+                    if($action == 'export_frm_xml'){
+                        $type = $frm_export_types;
+
+                        if(isset($_POST['frm_export_forms']))
+                            $ids = $_POST['frm_export_forms'];
                     }
                 }
             }
             if(!$type) return;
+            
+            if(is_array($ids))
+                $ids = implode(',', $ids);
 
             echo FrmProAppHelper::export_xml($type, compact('ids'));
             die();
@@ -142,6 +156,9 @@ class FrmProAppController{
     
     function standalone_route($controller, $action){
         if ($controller == 'fields'){
+            if(!defined('DOING_AJAX'))
+                define('DOING_AJAX', true);
+                
             global $frmpro_fields_controller;
             if ($action == 'ajax_get_data')
                 $frmpro_fields_controller->ajax_get_data(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('field_id'), FrmAppHelper::get_param('current_field'));
@@ -157,24 +174,34 @@ class FrmProAppController{
                 $frmpro_forms_controller->import_templates();
         }else if ($controller == 'entries'){
             global $frmpro_entries_controller;
-            if ($action == 'csv')
-                $frmpro_entries_controller->csv(FrmAppHelper::get_param('form'), FrmAppHelper::get_param('search'), FrmAppHelper::get_param('fid'));
-            else if($action == 'ajax_set_cookie')
-                $frmpro_entries_controller->set_cookie(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('form_id'));
-            else if($action == 'edit_entry_ajax')
-                $frmpro_entries_controller->edit_entry_ajax(FrmAppHelper::get_param('id'), FrmAppHelper::get_param('entry_id', false), FrmAppHelper::get_param('post_id', false));
-            else if($action == 'update_field_ajax')
-                $frmpro_entries_controller->update_field_ajax(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('field_id'), FrmAppHelper::get_param('value'));
-            else if($action == 'send_email')
-                $frmpro_entries_controller->send_email(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('form_id'), FrmAppHelper::get_param('type'));
-            else if($action == 'create')
-                $frmpro_entries_controller->ajax_create();
-            else if($action == 'update')
-                $frmpro_entries_controller->ajax_update();
-            else if($action == 'destroy')
-                $frmpro_entries_controller->ajax_destroy();
+            if ($action == 'csv'){
+                $s = isset($_REQUEST['s']) ? 's' : 'search';
+                $frmpro_entries_controller->csv(FrmAppHelper::get_param('form'), FrmAppHelper::get_param($s), FrmAppHelper::get_param('fid'));
+                unset($s);
+            }else{
+                if(!defined('DOING_AJAX'))
+                    define('DOING_AJAX', true);
+                    
+                if($action == 'ajax_set_cookie')
+                    $frmpro_entries_controller->set_cookie(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('form_id'));
+                else if($action == 'edit_entry_ajax')
+                    $frmpro_entries_controller->edit_entry_ajax(FrmAppHelper::get_param('id'), FrmAppHelper::get_param('entry_id', false), FrmAppHelper::get_param('post_id', false));
+                else if($action == 'update_field_ajax')
+                    $frmpro_entries_controller->update_field_ajax(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('field_id'), FrmAppHelper::get_param('value'));
+                else if($action == 'send_email')
+                    $frmpro_entries_controller->send_email(FrmAppHelper::get_param('entry_id'), FrmAppHelper::get_param('form_id'), FrmAppHelper::get_param('type'));
+                else if($action == 'create')
+                    $frmpro_entries_controller->ajax_create();
+                else if($action == 'update')
+                    $frmpro_entries_controller->ajax_update();
+                else if($action == 'destroy')
+                    $frmpro_entries_controller->ajax_destroy();
+            }
         }else if($controller == 'settings'){
             global $frmpro_settings;
+            if(!is_admin())
+                $use_saved = true;
+            
             include(FRMPRO_PATH .'/css/custom_theme.css.php');
         }
         

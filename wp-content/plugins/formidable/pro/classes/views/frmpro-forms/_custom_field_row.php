@@ -14,7 +14,7 @@
         foreach($values['fields'] as $fo){
             $fo = (array)$fo;
             if(!in_array($fo['type'], array('divider', 'html', 'break', 'captcha'))){ ?>
-                <option value="<?php echo $fo['id'] ?>" <?php selected($custom_data['field_id'], $fo['id']) ?>><?php echo FrmAppHelper::truncate($fo['name'], 80) ?></option>
+        <option value="<?php echo $fo['id'] ?>" <?php selected($custom_data['field_id'], $fo['id']) ?>><?php echo FrmAppHelper::truncate($fo['name'], 80) ?></option>
         <?php
             }
             unset($fo);

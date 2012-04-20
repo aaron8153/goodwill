@@ -11,8 +11,9 @@
             </td>
             <td>
             <select name="options[post_type]">
-                <?php foreach($post_types as $post_key => $post_type){
-                    echo '<option value="'. $post_key .'" '. selected($values['post_type'], $post_key).'>'. $post_type->labels->singular_name .'</option>'."\n";
+                <?php foreach($post_types as $post_key => $post_type){ ?>
+                    <option value="<?php echo $post_key ?>" <?php selected($values['post_type'], $post_key) ?>><?php echo $post_type->label ?></option>
+<?php
                     unset($post_type);
                     }
 

@@ -33,7 +33,7 @@
 <tr valign="top">
     <td><label><?php _e('Message', 'formidable') ?> </label></td>
     <td><?php if(isset($values['id'])) FrmProFieldsHelper::get_shortcode_select($values['id'], 'email_message', 'email'); ?><br/>
-        <textarea name="options[email_message]" id="email_message" cols="50" rows="5" class="frm_long_input"><?php echo $values['email_message'] ?></textarea>
+        <textarea name="options[email_message]" id="email_message" cols="50" rows="5" class="frm_long_input"><?php echo FrmAppHelper::esc_textarea($values['email_message']) ?></textarea>
     </td>
 </tr>
 
@@ -101,7 +101,7 @@
 <tr valign="top" class="hide_ar">
     <td><label><?php _e('Message', 'formidable') ?></label></td>
     <td><?php if(isset($values['id'])) FrmProFieldsHelper::get_shortcode_select($values['id'], 'ar_email_message', 'email'); ?><br/>
-        <textarea name="options[ar_email_message]" id="ar_email_message" cols="50" rows="5" style="width:98%"><?php echo $values['ar_email_message'] ?></textarea>
+        <textarea name="options[ar_email_message]" id="ar_email_message" cols="50" rows="5" style="width:98%"><?php echo FrmAppHelper::esc_textarea($values['ar_email_message']) ?></textarea>
     </td>
 </tr>
 

@@ -66,6 +66,24 @@ class FrmProAppHelper{
         return ($new_ver) ? '' : '.1.7.3';
     }
     
+    function get_user_id_param($user_id){
+        if($user_id and !empty($user_id) and !is_numeric($user_id)){
+            if($user_id == 'current'){
+                global $user_ID;
+                $user_id = $user_ID;
+            }else{
+                if(function_exists('get_user_by'))
+                    $user = get_user_by('login', $user_id);
+                else
+                    $user = get_userdatabylogin($user_id);
+                if($user)
+                    $user_id = $user->ID;
+                unset($user);
+            }
+        }
+        return $user_id;
+    }
+    
     function get_formatted_time($date, $date_format=false, $time_format=false){
         if(empty($date))
             return $date;
@@ -97,13 +115,51 @@ class FrmProAppHelper{
         return $formatted;
     }
     
-    function get_edit_link($id){
-        global $current_user, $frm_siteurl;
+    function human_time_diff($from, $to=''){
+    	if ( empty($to) )
+    		$to = time();
 
-    	$output = '';
-    	if($current_user && $current_user->wp_capabilities['administrator'] == 1) 
-    		$output = "<a href='{$frm_siteurl}/wp-admin/admin.php?page=formidable-entries&action=edit&id={$id}'>". __('Edit', 'formidable') ."</a>";
-    	
+    	// Array of time period chunks
+    	$chunks = array(
+    		array( 60 * 60 * 24 * 365 , __( 'year', 'formidable' ), __( 'years', 'formidable' ) ),
+    		array( 60 * 60 * 24 * 30 , __( 'month', 'formidable' ), __( 'months', 'formidable' ) ),
+    		array( 60 * 60 * 24 * 7, __( 'week', 'formidable' ), __( 'weeks', 'formidable' ) ),
+    		array( 60 * 60 * 24 , __( 'day', 'formidable' ), __( 'days', 'formidable' ) ),
+    		array( 60 * 60 , __( 'hour', 'formidable' ), __( 'hours', 'formidable' ) ),
+    		array( 60 , __( 'minute', 'formidable' ), __( 'minutes', 'formidable' ) ),
+    		array( 1, __( 'second', 'formidable' ), __( 'seconds', 'formidable' ) )
+    	);
+
+    	// Difference in seconds
+    	$diff = (int) ($to - $from);
+
+    	// Something went wrong with date calculation and we ended up with a negative date.
+    	if ( 0 > $diff )
+    		return '';
+
+    	/**
+    	 * We only want to output one chunks of time here, eg:
+    	 * x years
+    	 * xx months
+    	 * so there's only one bit of calculation below:
+    	 */
+
+    	//Step one: the first chunk
+    	for ( $i = 0, $j = count($chunks); $i < $j; $i++) {
+    		$seconds = $chunks[$i][0];
+
+    		// Finding the biggest chunk (if the chunk fits, break)
+    		if ( ( $count = floor($diff / $seconds) ) != 0 )
+    			break;
+    	}
+
+    	// Set output var
+    	$output = ( 1 == $count ) ? '1 '. $chunks[$i][1] : $count . ' ' . $chunks[$i][2];
+
+
+    	if ( !(int)trim($output) )
+    		$output = '0 ' . __( 'seconds', 'formidable' );
+
     	return $output;
     }
     
@@ -120,10 +176,23 @@ class FrmProAppHelper{
             else
                 return false;
         }
-
-        $dummy_ts = mktime(0, 0, 0, $date_elements['m'], $date_elements['d'], $date_elements['Y'] );
+        
+        if(is_numeric($date_elements['m']))
+            $dummy_ts = mktime(0, 0, 0, $date_elements['m'], (isset($date_elements['j']) ? $date_elements['j'] : $date_elements['d']), $date_elements['Y'] );
+        else
+            $dummy_ts = strtotime($date_str);
 
         return date( $to_format, $dummy_ts );
+    }
+    
+    function get_edit_link($id){
+        global $current_user, $frm_siteurl;
+
+    	$output = '';
+    	if($current_user && $current_user->wp_capabilities['administrator'] == 1) 
+    		$output = "<a href='{$frm_siteurl}/wp-admin/admin.php?page=formidable-entries&frm_action=edit&id={$id}'>". __('Edit', 'formidable') ."</a>";
+    	
+    	return $output;
     }
     
     function rewriting_on(){
@@ -157,7 +226,7 @@ class FrmProAppHelper{
     
 
     function item_checkbox($id){ ?>
-        <input type="checkbox" name="item-action[<?php echo $id; ?>]" class="item-action-checkbox" value="" /> &nbsp;
+        <input type="checkbox" name="item-action[]" class="item-action-checkbox" value="<?php echo $id; ?>" /> &nbsp;
     <?php    
     }
     
@@ -295,13 +364,16 @@ class FrmProAppHelper{
         if(!$form_id or !$where_opt)
             return $entry_ids;
            
-        if(is_numeric($where_opt)){
-            if($where_val == 'NOW')
-                $where_val = gmdate('Y-m-d');
-              
+        if(is_numeric($where_opt)){              
             $where_field = FrmField::getOne($where_opt);
             if(!$where_field)
                 return $entry_ids;
+                
+            if($where_val == 'NOW')
+                $where_val = date_i18n('Y-m-d', strtotime(current_time('mysql')));
+                
+            if($where_field->type == 'date')
+                $where_val = date('Y-m-d', strtotime($where_val));
                 
             $field_options = maybe_unserialize($where_field->field_options);
             
@@ -316,13 +388,26 @@ class FrmProAppHelper{
                 unset($linked_id);
             }
               
-            $where_val = addslashes($where_val);
-            if($where_is == 'LIKE' or $where_is == 'not LIKE')
-                $where_val = '%'.$where_val.'%';
+            $temp_where_is = str_replace(array('!', 'not '), '', $where_is);
             
-            $where_statement = apply_filters('frm_where_filter', "meta_value ". $where_is ." '".$where_val ."' and fi.id='$where_opt'", $args);
+            //get values that aren't blank and then remove them from entry list
+            if($where_val == '' and $temp_where_is == '=')
+                $temp_where_is = '!=';
+            
+            if($where_is == 'LIKE' or $where_is == 'not LIKE')
+                $where_val = "'%". esc_sql(like_escape($where_val)) ."%'";
+            else if(!strpos($where_is, 'in'))
+                $where_val = "'". esc_sql($where_val) ."'";
+                
+            $where_statement = "meta_value ". ($where_field->type == 'number' ? ' +0 ' : '') . $temp_where_is ." ". $where_val ." and fi.id='$where_opt'";
+            $where_statement = apply_filters('frm_where_filter', $where_statement, $args);
             
             $new_ids = $frm_entry_meta->getEntryIds($where_statement);
+            
+            if ($where_is != $temp_where_is)
+                $new_ids = array_diff($entry_ids, $new_ids);
+            
+            unset($temp_where_is);
             
             if(!empty($form_posts)){ //if there are posts linked to entries for this form  
                 if(isset($field_options['post_field']) and in_array($field_options['post_field'], array('post_category', 'post_custom', 'post_status', 'post_content', 'post_excerpt', 'post_title', 'post_name', 'post_date'))){
@@ -341,9 +426,9 @@ class FrmProAppHelper{
                             $temp_where_is = str_replace(array('!', 'not '), '', $where_is);
                                 
                             $join_with = ' OR ';
-                            $t_where = "t.term_id {$temp_where_is} '{$where_val}'";
-                            $t_where .= " {$join_with} t.slug {$temp_where_is} '{$where_val}'";
-                            $t_where .= " {$join_with} t.name {$temp_where_is} '{$where_val}'";
+                            $t_where = "t.term_id {$temp_where_is} {$where_val}";
+                            $t_where .= " {$join_with} t.slug {$temp_where_is} {$where_val}";
+                            $t_where .= " {$join_with} t.name {$temp_where_is} {$where_val}";
                             unset($temp_where_is);
                             
                             $query = "SELECT tr.object_id FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON tt.term_id = t.term_id INNER JOIN $wpdb->term_relationships AS tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy = '{$field_options['taxonomy']}' AND ({$t_where}) AND tr.object_id IN (". implode(',', array_keys($post_ids)) .")";
@@ -352,12 +437,14 @@ class FrmProAppHelper{
                             if ($where_is == '!=' or $where_is == 'not LIKE'){
                                 $remove_posts = $add_posts;
                                 $add_posts = false;
+                            }else if(!$add_posts){
+                                return array();
                             }
                         }else if($field_options['post_field'] == 'post_custom' and $field_options['custom_field'] != ''){
                             //check custom fields
-                            $add_posts = $wpdb->get_col("SELECT post_id FROM $wpdb->postmeta WHERE post_id in (". implode(',', array_keys($post_ids)) .") AND meta_key='".$field_options['custom_field']."' AND meta_value ". $where_is." '".$where_val ."'");
+                            $add_posts = $wpdb->get_col("SELECT post_id FROM $wpdb->postmeta WHERE post_id in (". implode(',', array_keys($post_ids)) .") AND meta_key='".$field_options['custom_field']."' AND meta_value ". ($where_field->type == 'number' ? ' +0 ' : ''). $where_is." ".$where_val);
                         }else{ //if field is post field
-                            $add_posts = $wpdb->get_col("SELECT ID FROM $wpdb->posts WHERE ID in (". implode(',', array_keys($post_ids)) .") AND ".$field_options['post_field'].' '. $where_is." '".$where_val ."'");
+                            $add_posts = $wpdb->get_col("SELECT ID FROM $wpdb->posts WHERE ID in (". implode(',', array_keys($post_ids)) .") AND ".$field_options['post_field'] .($where_field->type == 'number' ? ' +0 ' : ' '). $where_is." ".$where_val);
                         }
                         
                         if($add_posts and !empty($add_posts)){
@@ -378,6 +465,7 @@ class FrmProAppHelper{
                                     unset($key);
                                 }
                             }
+                            unset($remove_posts);
                         }else if(!$add_posts){
                             $new_ids = array();
                         }
@@ -394,6 +482,24 @@ class FrmProAppHelper{
         return $entry_ids;
     }
     
+    function get_current_form_id(){
+        global $frm_current_form;
+        
+        $form_id = 0;
+        if($frm_current_form)
+            $form_id = $frm_current_form->id;
+        
+        if(!$form_id)
+            $form_id = FrmAppHelper::get_param('form', false);
+            
+        if(!$form_id){
+            global $frm_form;
+            $frm_current_form = $frm_form->getAll("is_template=0 AND (status is NULL OR status = '' OR status = 'published')", ' ORDER BY name', ' LIMIT 1');
+            $form_id = $frm_current_form ? $frm_current_form->id : 0;
+        }
+        return $form_id;
+    }
+    
     function export_xml($type, $args = array() ) {
     	global $wpdb, $frmdb, $frmprodb;
 	    
@@ -403,7 +509,7 @@ class FrmProAppHelper{
 	        
 	    $defaults = array('is_template' => false, 'ids' => false);
 	    $args = wp_parse_args( $args, $defaults );
-	    
+
 	    $where = $join = '';
     	
         if(function_exists('sanitize_key'))
@@ -427,9 +533,13 @@ class FrmProAppHelper{
     	    
     	}
     	
+    	if(is_array($args['ids']))
+	        $args['ids'] = implode(',', $args['ids']);
+	        
     	if (isset($table) and $args['ids']){
     	    if(!empty($where))
     	        $where .= " AND ";
+    	    
     	    //$ids = array_fill( 0, count($args['ids']), '%s' );
     		$where .= "{$table}.id IN (". $args['ids'] .")";
         }
@@ -630,70 +740,31 @@ class FrmProAppHelper{
         return $new;
     }
     
+    //Let WordPress process the uploads
     function upload_file($field_id){
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
         
+        add_filter('upload_dir', array('FrmProAppHelper', 'upload_dir'));
         $media_id = media_handle_upload($field_id, 0);
+        remove_filter('upload_dir', array('FrmProAppHelper', 'upload_dir'));
         
-        if (is_numeric($media_id)){
-            $uploads = wp_upload_dir();
-            $target_path = $uploads['basedir'];
-
-            if(!file_exists($target_path))
-              @mkdir($target_path."/");
-              
-            $relative_path = apply_filters('frm_upload_folder', 'formidable');
-            $relative_path = untrailingslashit($relative_path);
-            $folders = explode('/', $relative_path);
-            
-            foreach($folders as $folder){
-                $target_path .= '/'. $folder;
-                if(!file_exists($target_path))
-                  @mkdir($target_path."/");
-            }
-            
-            //get media name and path
-            $current_path = get_attached_file($media_id);
-            $attachment = get_post($media_id, ARRAY_A);
-            $original_filename = basename($attachment['guid']);
-            $uploads_path = str_replace('/'.$original_filename, '', $current_path);
-            $base_filename = wp_unique_filename($target_path, $original_filename);
-            $attachment['guid'] = $tmp_file = $target_path . "/$base_filename";
-            //$attachment['post_title'] = $base_filename;
-            $meta = get_post_meta($media_id, '_wp_attachment_metadata');
-            $meta[0]['file'] = $relative_path. '/'. $base_filename;
-            if(rename($current_path, $tmp_file)){
-                //move all sizes
-                if(isset($meta[0]['sizes'])){
-                    $info = pathinfo($original_filename);
-                    $temp_base_filename =  basename($base_filename,'.'.$info['extension']);
-                    $temp_original_filename =  basename($original_filename,'.'.$info['extension']);
-                    unset($info);
-                    foreach($meta[0]['sizes'] as $size => $filedata){
-                        $image = wp_get_attachment_image_src($media_id, $size);
-                        if($image and isset($meta[0]['sizes'][$size])){
-                            $uploads_url = str_replace('/'.$meta[0]['sizes'][$size]['file'], '', $image[0]);
-                            //switch URL to path
-                            $image_path = str_replace($uploads_url, $uploads_path, $image[0]);
-                            if(file_exists($image_path)){
-                                $filename = str_replace($temp_original_filename, $temp_base_filename, basename($image_path));
-                                rename($image_path, $target_path . "/$filename");
-                                $meta[0]['sizes'][$size]['file'] = $filename;
-                            }
-                        }
-                    }
-                }
-                
-                update_attached_file($media_id, $relative_path.'/'.$base_filename);
-                wp_update_attachment_metadata($media_id, $meta[0]);
-                
-                //update guid to new url
-                wp_update_post($attachment);
-            }
-        }
         return $media_id;
+    }
+    
+    //Upload files into "formidable" subdirectory
+    function upload_dir($uploads){
+        $relative_path = apply_filters('frm_upload_folder', 'formidable');
+        $relative_path = untrailingslashit($relative_path);
+        
+        if(!empty($relative_path)){
+            $uploads['path'] = $uploads['basedir'] .'/'. $relative_path;
+            $uploads['url'] = $uploads['baseurl'] .'/'. $relative_path;
+            $uploads['subdir'] = '/'. $relative_path;
+        }
+
+        return $uploads;
     }
     
     
@@ -871,7 +942,7 @@ class FrmProAppHelper{
                     
                }
                
-               if(!isset($values['item_key']))
+               if(!isset($values['item_key']) or empty($values['item_key']))
                    $values['item_key'] = $data[$entry_key];
                    
                if(isset($values['created_at']))

@@ -2,7 +2,7 @@
     <div id="icon-themes" class="icon32"><br/></div>
     <h2><?php _e('Edit Custom Display', 'formidable'); ?>
         <?php if(current_user_can('frm_create_entries')){ ?>
-        <a href="?page=formidable-entry-templates&amp;action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
+        <a href="?page=formidable-entry-templates&amp;frm_action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
         <?php } ?>
     </h2>
 
@@ -14,7 +14,7 @@
 
 
     <form method="post">
-        <input type="hidden" name="action" value="update" />
+        <input type="hidden" name="frm_action" value="update" />
         <input type="hidden" name="id" value="<?php echo $id; ?>" />
         <?php 
         if(is_numeric($values['form_id'])) FrmAppController::get_form_nav($values['form_id'], true);

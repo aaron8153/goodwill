@@ -135,16 +135,16 @@ class FrmProEntry{
     
     function set_cookie($entry_id, $form_id){
         //if form options['single] or isset($_POST['frm_single_submit']){
-        if((isset($_POST) and isset($_POST['frm_skip_cookie'])) or defined('WP_IMPORTING')) return;
-        ?>
-        <script type="text/javascript">
-        jQuery(document).ready(function($){
-            jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL; ?>",
-              data:"controller=entries&action=ajax_set_cookie&entry_id=<?php echo $entry_id; ?>&form_id=<?php echo $form_id; ?>"
-            });
-        });    
-        </script>
-        <?php
+        if((isset($_POST) and isset($_POST['frm_skip_cookie'])) or defined('WP_IMPORTING') or defined('DOING_AJAX')) return;
+?>
+<script type="text/javascript">
+jQuery(document).ready(function($){
+jQuery.ajax({type:"POST",url:"<?php echo FRM_SCRIPT_URL; ?>",
+data:"controller=entries&frm_action=ajax_set_cookie&entry_id=<?php echo $entry_id; ?>&form_id=<?php echo $form_id; ?>"
+});
+});    
+</script>
+<?php
         //}
     }
     

@@ -1,7 +1,7 @@
 <div class="wrap">
     <div id="icon-edit-pages" class="icon32"><br/></div>
     <h2><?php _e('Edit Entry', 'formidable') ?>
-        <a href="?page=formidable-entries&amp;action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
+        <a href="?page=formidable-entries&amp;frm_action=new" class="button add-new-h2"><?php _e('Add New', 'formidable'); ?></a>
     </h2>
         
     <div class="form-wrap">
@@ -22,8 +22,8 @@
                     <?php if($record->post_id){ ?>
                     <a href="<?php echo get_permalink($record->post_id) ?>" class="button-secondary alignright" style="margin-left:10px"><?php _e('View Post', 'formidable') ?></a>
                     <?php } ?>
-                    <a href="?page=formidable-entries&amp;action=show&amp;id=<?php echo $record->id; ?>" class="button-secondary alignright"><?php _e('View', 'formidable') ?></a>
-                    <a href="?page=formidable-entries&amp;action=duplicate&amp;form=<?php echo $form->id ?>&amp;id=<?php echo $record->id; ?>" class="button-secondary alignright" style="margin-right:10px"><?php _e('Duplicate', 'formidable') ?></a>
+                    <a href="?page=formidable-entries&amp;frm_action=show&amp;id=<?php echo $record->id; ?>" class="button-secondary alignright"><?php _e('View', 'formidable') ?></a>
+                    <a href="?page=formidable-entries&amp;frm_action=duplicate&amp;form=<?php echo $form->id ?>&amp;id=<?php echo $record->id; ?>" class="button-secondary alignright" style="margin-right:10px"><?php _e('Duplicate', 'formidable') ?></a>
                     <div class="clear"></div>
 
                     <p class="howto">
@@ -35,7 +35,7 @@
                 
                 <div id="major-publishing-actions">
             	    <div id="delete-action">
-            	    <a class="submitdelete deletion" href="?page=formidable-entries&amp;action=destroy&amp;id=<?php echo $record->id; ?>&amp;form=<?php echo $form->id ?>" onclick="return confirm('<?php _e('Are you sure you want to delete this entry?', 'formidable') ?>);" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
+            	    <a class="submitdelete deletion" href="?page=formidable-entries&amp;frm_action=destroy&amp;id=<?php echo $record->id; ?>&amp;form=<?php echo $form->id ?>" onclick="return confirm('<?php _e('Are you sure you want to delete this entry?', 'formidable') ?>);" title="<?php _e('Delete', 'formidable') ?>"><?php _e('Delete', 'formidable') ?></a>
             	    </div>
             	    <div id="publishing-action">
                     <input type="submit" value="<?php echo esc_attr($submit) ?>" class="button-primary" />
