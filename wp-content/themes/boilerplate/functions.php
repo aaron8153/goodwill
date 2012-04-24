@@ -530,17 +530,266 @@ if ( function_exists( 'add_theme_support' ) ) {
 	add_theme_support( 'post-thumbnails' );
 }
 
+// [JC_04/23/2012]:  the following function is a hook which fires
+//					 after a Formdidable form is submitted.  If the form
+//					 is the Job Application, it takes the values, creates
+//					 a text file in the given format, and emails it is both a 
+//					 message and an attachment to the given email address.
 add_filter('frm_after_create_entry', 'after_entry_created', 30, 2);
 function after_entry_created($entry_id, $form_id){
 	if ($form_id == 22) {
 	
-		$theMsg = "Here is a value: ";
-	
-		if(isset($_POST['item_meta'][179])) {
-			$theMsg .= $_POST['item_meta'][179];
+		// Form Values
+		$appVal179 = $_POST['item_meta'][179]; // position applied for
+		$appVal180 = $_POST['item_meta'][180]; // how did you find out about us
+		$appVal181 = $_POST['item_meta'][181]; // last name
+		$appVal182 = $_POST['item_meta'][182]; // first name
+		$appVal183 = $_POST['item_meta'][183]; // middle name
+		$appVal184 = $_POST['item_meta'][184]; // address
+		$appVal185 = $_POST['item_meta'][185]; // city
+		$appVal323 = $_POST['item_meta'][323]; // state
+		$appVal324 = $_POST['item_meta'][324]; // zip
+		$appVal330 = $_POST['item_meta'][330]; // email
+		$appVal186 = $_POST['item_meta'][186]; // daytime phone
+		$appVal423 = $_POST['item_meta'][423]; // daytime phone area code
+		$appVal187 = $_POST['item_meta'][187]; // evening phone
+		$appVal188 = $_POST['item_meta'][188]; // can provide proof to work in US
+		$appVal189 = $_POST['item_meta'][189]; // ever filled out app with MERS
+		$appVal191 = $_POST['item_meta'][191]; // if yes, date
+		$appVal190 = $_POST['item_meta'][190]; // ever been employed by MERS
+		$appVal192 = $_POST['item_meta'][192]; // if yes, date
+		$appVal193 = $_POST['item_meta'][193]; // may we contact present employer
+		$appVal194 = $_POST['item_meta'][194]; // days, hours, etc. not available for work
+		$appVal195 = $_POST['item_meta'][195]; // are you available to work		
+		$appVal196 = $_POST['item_meta'][196]; // can perform essential function of job
+		$appVal197 = $_POST['item_meta'][197]; // can travel between locations
+		$appVal200 = $_POST['item_meta'][200]; // out of town travel
+		$appVal201 = $_POST['item_meta'][201]; // ever been convicted of felony
+		$appVal206 = $_POST['item_meta'][206]; // if yes, date
+		$appVal199 = $_POST['item_meta'][199]; // had an SIS sentence
+		$appVal203 = $_POST['item_meta'][203]; // if yes, please explain
+		$appVal205 = $_POST['item_meta'][205]; // have a pending felony case
+		$appVal204 = $_POST['item_meta'][204]; // if yes, please explain
+		$appVal202 = $_POST['item_meta'][202]; // list relatives, friends at MERS
+		$appVal211 = $_POST['item_meta'][211]; // employer 1 name
+		$appVal215 = $_POST['item_meta'][215]; // employer 1 phone
+		$appVal216 = $_POST['item_meta'][216]; // employer 1 work dates
+		$appVal217 = $_POST['item_meta'][217]; // employer 1 job title
+		$appVal218 = $_POST['item_meta'][218]; // employer 1 supervisor
+		$appVal219 = $_POST['item_meta'][219]; // employer 1 hourly rate/salary
+		$appVal220 = $_POST['item_meta'][220]; // employer 1 job duties
+		$appVal221 = $_POST['item_meta'][221]; // employer 1 reason leaving
+		$appVal222 = $_POST['item_meta'][222]; // employer 2 name
+		$appVal224 = $_POST['item_meta'][224]; // employer 2 work dates
+		$appVal226 = $_POST['item_meta'][226]; // employer 2 job title
+		$appVal227 = $_POST['item_meta'][227]; // employer 2 supervisor
+		$appVal228 = $_POST['item_meta'][228]; // employer 2 hourly rate/salary
+		$appVal229 = $_POST['item_meta'][229]; // employer 2 job duties
+		$appVal231 = $_POST['item_meta'][231]; // employer 2 reason leaving
+		$appVal232 = $_POST['item_meta'][232]; // employer 3 name
+		$appVal233 = $_POST['item_meta'][233]; // employer 3 work dates
+		$appVal235 = $_POST['item_meta'][235]; // employer 3 job title
+		$appVal237 = $_POST['item_meta'][237]; // employer 3 supervisor
+		$appVal238 = $_POST['item_meta'][238]; // employer 3 hourly rate/salary
+		$appVal239 = $_POST['item_meta'][239]; // employer 3 job duties
+		$appVal241 = $_POST['item_meta'][241]; // employer 3 reason leaving
+		$appVal246 = $_POST['item_meta'][246]; // employer 4 name
+		$appVal247 = $_POST['item_meta'][247]; // employer 4 work dates
+		$appVal249 = $_POST['item_meta'][249]; // employer 4 job title
+		$appVal250 = $_POST['item_meta'][250]; // employer 4 supervisor
+		$appVal251 = $_POST['item_meta'][251]; // employer 4 hourly rate/salary
+		$appVal252 = $_POST['item_meta'][252]; // employer 4 job duties
+		$appVal253 = $_POST['item_meta'][253]; // employer 4 reason leaving
+		$appVal254 = $_POST['item_meta'][254]; // employer 5 name
+		$appVal255 = $_POST['item_meta'][255]; // employer 5 work dates
+		$appVal256 = $_POST['item_meta'][256]; // employer 5 job title
+		$appVal257 = $_POST['item_meta'][257]; // employer 5 supervisor
+		$appVal258 = $_POST['item_meta'][258]; // employer 5 hourly rate/salary
+		$appVal259 = $_POST['item_meta'][259]; // employer 5 job duties
+		$appVal260 = $_POST['item_meta'][260]; // employer 5 reason leaving
+		$appVal325 = $_POST['item_meta'][325]; // education drop down
+		$appVal265 = $_POST['item_meta'][265]; // have graduated high school or GED
+		$appVal266 = $_POST['item_meta'][266]; // high school or GED diploma		
+		$appVal267 = $_POST['item_meta'][267]; // high school courses studied
+		$appVal269 = $_POST['item_meta'][269]; // have graduated with assoc. degree
+		$appVal270 = $_POST['item_meta'][270]; // assoc. degree diploma
+		$appVal271 = $_POST['item_meta'][271]; // assoc. degree courses studied
+		$appVal273 = $_POST['item_meta'][273]; // have graduated with undergrad degree
+		$appVal274 = $_POST['item_meta'][274]; // undergrad diploma
+		$appVal275 = $_POST['item_meta'][275]; // undergrad courses studied
+		$appVal277 = $_POST['item_meta'][277]; // have graduated with graduate degree
+		$appVal278 = $_POST['item_meta'][278]; // graduate diploma
+		$appVal279 = $_POST['item_meta'][279]; // graduate courses studied
+		$appVal281 = $_POST['item_meta'][281]; // any other school, training, etc.
+		$appVal282 = $_POST['item_meta'][282]; // any additional work related
+		$appVal285 = $_POST['item_meta'][285]; // reference 1 name
+		$appVal286 = $_POST['item_meta'][286]; // reference 1 address
+		$appVal287 = $_POST['item_meta'][287]; // reference 1 phone
+		$appVal289 = $_POST['item_meta'][289]; // reference 2 name
+		$appVal290 = $_POST['item_meta'][290]; // reference 2 address
+		$appVal291 = $_POST['item_meta'][291]; // reference 2 phone
+		$appVal292 = $_POST['item_meta'][292]; // reference 3 name
+		$appVal293 = $_POST['item_meta'][293]; // reference 3 address
+		$appVal294 = $_POST['item_meta'][294]; // reference 3 phone
+		$appVal300 = $_POST['item_meta'][300]; // agree with employment conditions
+		$appVal417 = $_POST['item_meta'][417]; // employer 2 phone number
+		$appVal418 = $_POST['item_meta'][418]; // employer 3 phone number
+		$appVal421 = $_POST['item_meta'][421]; // employer 4 phone number
+		$appVal422 = $_POST['item_meta'][422]; // employer 5 phone number		
+				
+		$chrRtrn = "\r\n";
+		$dblChrRtrn = "\r\n\r\n";
+		
+		// Basic Information
+		$theMsg .= "Education Level:" . $dblChrRtrn . $appVal325 . $dblChrRtrn;
+		$theMsg .= "Position(s) Applied For:" . $dblChrRtrn . $appVal179 . $dblChrRtrn;
+		$theMsg .= "Last Name:" . $dblChrRtrn . $appVal181 . $dblChrRtrn;
+		$theMsg .= "First Name:" . $dblChrRtrn . $appVal182 . $dblChrRtrn;		
+		$theMsg .= "Daytime Phone Area Code:" . $dblChrRtrn . $appVal423 . $dblChrRtrn;		
+		$theMsg .= "5 digit Zip Code:" . $dblChrRtrn . $appVal324 . $chrRtrn;
+		$theMsg .= $dblChrRtrn;		
+		$theMsg .= "Position(s) Applied for:  " . $appVal179 . $chrRtrn;							
+		$theMsg .= "Date of Application:  " . date("F j, Y") . $chrRtrn;	
+								
+		$findOutAboutUs = "";
+		for ($i=0; $i<count($appVal180); $i++){ 
+			$findOutAboutUs = ($findOutAboutUs == "") ? $appVal180[$i] : ($findOutAboutUs .= ", " . $appVal180[$i]);
 		}
-			
-		$newFileName = date("Ymd:s");	
+		$theMsg .= "How did you find out about us?  " . $findOutAboutUs . $chrRtrn;
+		
+		$theMsg .= "Last Name:  " . $appVal181 . $chrRtrn;							
+		$theMsg .= "First Name:  " . $appVal182 . $chrRtrn;							
+		$theMsg .= "Middle Name:  " . $appVal183 . $chrRtrn;
+		$theMsg .= "Address:  " . $appVal184 . $chrRtrn;
+		$theMsg .= "City/ State/ Zip:  " . $appVal185 . "/ " . $appVal323 . "/ " . $appVal324 . $chrRtrn;
+		$theMsg .= "Email:  " . $appVal330 . $chrRtrn;				
+		$theMsg .= "Daytime Phone:  " . $appVal423 . " " . $appVal186 . $chrRtrn;				
+		$theMsg .= "Evening Phone:  " . $appVal187 . $chrRtrn;				
+		$theMsg .= "Have you ever filled out an application with us before?  " . $appVal189 . $chrRtrn;				
+		$theMsg .= "If yes, date:  " .  $appVal191 . $chrRtrn;
+		$theMsg .= "Have you ever been employed with us before?  " . $appVal190 . $chrRtrn;				
+		$theMsg .= "If yes, date:  " . $appVal192 . $chrRtrn;											
+		$theMsg .= "May we contact your present employer?  " . $appVal193 . $chrRtrn;
+		$theMsg .= "Are there any days or hours you are not available to work?  " . $appVal194 . $chrRtrn;
+		
+		
+		
+		$avail = "";
+		for ($i=0; $i<count($appVal195); $i++){ 
+			$avail = ($avail == "") ? $appVal195[$i] : ($avail .= ", " . $appVal195[$i]);
+		}
+		
+		$theMsg .= "Are you available to work:  " . $avail . $chrRtrn;
+		$theMsg .= "Can you perform the essential functions of the job you are applying for?  " . $appVal196 . $chrRtrn;
+		$theMsg .= "Can you travel between locations?  " . $appVal197 . $chrRtrn;
+		$theMsg .= "Out-of-town?" . $appVal200 . $chrRtrn;
+		$theMsg .= "Have you ever been convicted of a felony?  " . $appVal201 . $chrRtrn;
+		$theMsg .= "If yes, date:  " . $appVal206 . $chrRtrn;
+		$theMsg .= "Had an SIS Sentence?  " . $appVal199 . $chrRtrn;
+		$theMsg .= "If yes, please explain:  " . $appVal203 . $chrRtrn;
+		$theMsg .= "Have a pending felony case(s)?  " . $appVal205 . $chrRtrn;
+		$theMsg .= "If yes, please explain:  " . $appVal204 . $chrRtrn;		
+		$theMsg .= "Please list and current relatives of friends employed with MERS Goodwill:  " . $appVal202 . $chrRtrn;		
+		
+		// Employer 1
+		$theMsg .= "Employer 1 ..." . $chrRtrn;		
+		$theMsg .= "Employer:  " . $appVal211. $chrRtrn;		
+		$theMsg .= "Employer's Phone Number:  " . $appVal215 . $chrRtrn;
+		$theMsg .= "Work Dates From:  " . $appVal216 . $chrRtrn;	
+		$theMsg .= "Job Title:  " . $appVal217 . $chrRtrn;
+		$theMsg .= "Supervisor:  " . $appVal218 . $chrRtrn;		
+		$theMsg .= "Hourly Rate/Salary Starting:  " . $appVal219 . $chrRtrn;			
+		$theMsg .= "Job Duties:  " . $appVal220 . $chrRtrn;		
+		$theMsg .= "Reason for leaving:  " . $appVal221 . $chrRtrn;		
+		
+		// Employer 2
+		$theMsg .= "Employer 2 ..." . $chrRtrn;		
+		$theMsg .= "Employer:  " . $appVal222 . $chrRtrn;		
+		$theMsg .= "Employer's Phone Number:  " . $appVal417 . $chrRtrn;
+		$theMsg .= "Work Dates From:  " . $appVal224 . $chrRtrn;
+		$theMsg .= "Job Title:  " . $appVal226 . $chrRtrn;
+		$theMsg .= "Supervisor:  " . $appVal227 . $chrRtrn;		
+		$theMsg .= "Hourly Rate/Salary Starting:  " . $appVal228 . $chrRtrn;		
+		$theMsg .= "Job Duties:  " . $appVal229 . $chrRtrn;		
+		$theMsg .= "Reason for leaving:  " . $appVal231 . $chrRtrn;
+		
+		// Employer 3
+		$theMsg .= "Employer 3 ..." . $chrRtrn;		
+		$theMsg .= "Employer:  " . $appVal232 . $chrRtrn;		
+		$theMsg .= "Employer's Phone Number:  " . $appVal418 . $chrRtrn;
+		$theMsg .= "Work Dates From:  " . $appVal233 . $chrRtrn;
+		$theMsg .= "Job Title:  " . $appVal235 . $chrRtrn;
+		$theMsg .= "Supervisor:  " . $appVal237 . $chrRtrn;		
+		$theMsg .= "Hourly Rate/Salary Starting:  " . $appVal238 . $chrRtrn;			
+		$theMsg .= "Job Duties:  " . $appVal239 . $chrRtrn;		
+		$theMsg .= "Reason for leaving:  " . $appVal241 . $chrRtrn;
+		
+		// Employer 4
+		$theMsg .= "Employer 4 ..." . $chrRtrn;		
+		$theMsg .= "Employer:  " . $appVal246 . $chrRtrn;		
+		$theMsg .= "Employer's Phone Number:  " . $appVal421 . $chrRtrn;
+		$theMsg .= "Work Dates From:  " . $appVal247 . $chrRtrn;
+		$theMsg .= "Job Title:  " . $appVal249 . $chrRtrn;
+		$theMsg .= "Supervisor:  " . $appVal250 . $chrRtrn;		
+		$theMsg .= "Hourly Rate/Salary Starting:  " . $appVal251 . $chrRtrn;			
+		$theMsg .= "Job Duties:  " . $appVal252 . $chrRtrn;		
+		$theMsg .= "Reason for leaving:  " . $appVal253 . $chrRtrn;
+		
+		// Employer 5
+		$theMsg .= "Employer 5 ..." . $chrRtrn;		
+		$theMsg .= "Employer:  " . $appVal254 . $chrRtrn;		
+		$theMsg .= "Employer's Phone Number:  " . $appVal422 . $chrRtrn;
+		$theMsg .= "Work Dates From:  " . $appVal255 . $chrRtrn;
+		$theMsg .= "Job Title:  " . $appVal256 . $chrRtrn;
+		$theMsg .= "Supervisor:  " . $appVal257 . $chrRtrn;		
+		$theMsg .= "Hourly Rate/Salary Starting:  " . $appVal258 . $chrRtrn;			
+		$theMsg .= "Job Duties:  " . $appVal259 . $chrRtrn;		
+		$theMsg .= "Reason for leaving:  " . $appVal260 . $chrRtrn;
+
+		// Graduate Highschool Degree
+		$theMsg .= "Did you Graduate from Highschool?  " . $appVal265 . $chrRtrn;		
+		$theMsg .= "If No, did you get your GED or equivalent Diploma?  " . $appVal266 . $chrRtrn;
+		$theMsg .= "Courses Studied:  " . $appVal267 . $chrRtrn;
+
+		// Graduate with Associates Degree
+		$theMsg .= "Did you Graduate with an Associates Degree?  " . $appVal269 . $chrRtrn;		
+		$theMsg .= "Did you obtain your Diploma?  " . $appVal270 . $chrRtrn;
+		$theMsg .= "Courses Studied:  " . $appVal271 . $chrRtrn;
+
+		// Graduate with Undergraduate Degree
+		$theMsg .= "Did you Graduate with an Undergraduate Degree?  " . $appVal273 . $chrRtrn;		
+		$theMsg .= "Did you obtain your Diploma?  " . $appVal274 . $chrRtrn;
+		$theMsg .= "Courses Studied:  " . $appVal275 . $chrRtrn;
+
+		// Graduate with Graduate Degree
+		$theMsg .= "Did you Graduate with an Graduate Degree?  " . $appVal277 . $chrRtrn;		
+		$theMsg .= "Did you obtain your Diploma?  " . $appVal278 . $chrRtrn;
+		$theMsg .= "Courses Studied:  " . $appVal279 . $chrRtrn;
+
+		$theMsg .= "List any other school, training, etc:  " . $appVal281 . $chrRtrn;
+		$theMsg .= "State any additional work related info which would be helpful:  " . $appVal282 . $chrRtrn;
+		
+		// Reference 1
+		$theMsg .= "Reference 1 ..." . $chrRtrn;
+		$theMsg .= "Name:  " . $appVal285 . $chrRtrn;
+		$theMsg .= "Address:  " . $appVal286 . $chrRtrn;
+		$theMsg .= "Phone:  " . $appVal287 . $chrRtrn;		
+
+		// Reference 2
+		$theMsg .= "Reference 2 ..." . $chrRtrn;
+		$theMsg .= "Name:  " . $appVal289 . $chrRtrn;
+		$theMsg .= "Address:  " . $appVal290 . $chrRtrn;
+		$theMsg .= "Phone:  " . $appVal291 . $chrRtrn;		
+
+		// Reference 3
+		$theMsg .= "Reference 3 ..." . $chrRtrn;
+		$theMsg .= "Name:  " . $appVal292 . $chrRtrn;
+		$theMsg .= "Address:  " . $appVal293 . $chrRtrn;
+		$theMsg .= "Phone:  " . $appVal294 . $chrRtrn;		
+		
+		$theMsg .= "Agree with Conditions of Employment?  " . $appVal300 . $chrRtrn;
+									
+		$newFileName = date("Ymd_s");	
 			
 		$ourFileName = WP_CONTENT_DIR . "/uploads/formidable/applications/" . $newFileName . ".txt";		
 		$ourFileHandle = fopen($ourFileName, 'w') or die("Error:  Cannot Open File");
@@ -550,11 +799,11 @@ function after_entry_created($entry_id, $form_id){
 		
 		$attachment = $ourFileName;
 		
-		$theHeaders = "From: test@hotmail.com\r\n";
-		wp_mail('imcrainjames@gmail.com', 'New Job Application", $theMsg, $theHeaders, $attachment);
+		$theHeaders = "From: isupport@mersgoodwill.org\r\n";  		
+		wp_mail('VCAROTHERS@MERSGOODWILL.ORG', "New Job Application", $theMsg, $theHeaders, $attachment);
+		//wp_mail('aj@goelastic.com', "New Job Application", $theMsg, $theHeaders, $attachment);  --Elastic Testing
+
 	}
-	
-  	
 }
 
 ?>

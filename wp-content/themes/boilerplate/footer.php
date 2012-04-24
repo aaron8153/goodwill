@@ -93,7 +93,7 @@
 								break;
 								
 							case "Auto Donations":
-								new_email = "rvetter@mersgoodwill.org";
+								new_email = "njordan@mersgoodwill.org";
 								break;
 								
 							case "Custodial and Business Services":
@@ -109,7 +109,7 @@
 								break;
 								
 							case "Health & Safety":
-								new_email = "dkutchback@mersgoodwill.org";
+								new_email = "cwicks@mersgoodwill.org";
 								break;
 								
 							case "Home Pick-Up Services":

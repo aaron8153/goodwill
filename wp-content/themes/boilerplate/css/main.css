@@ -569,6 +569,7 @@ li.widget_recent_entries {
 	background: url(../images/recent-bg.png) no-repeat;
 	width: 244px;
 	height: 367px;
+	overflow: hidden;
 }
 
 #left-col ul.xoxo {
